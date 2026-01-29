@@ -17,7 +17,7 @@ fun MainScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     
     val tabs = listOf(
-        BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_rate)),
+        BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_bar)),
         BottomNavItem("Articles", Icons.Default.Info),
         BottomNavItem("Scanner", Icons.Default.Search),
         BottomNavItem("More", Icons.Default.Menu)
