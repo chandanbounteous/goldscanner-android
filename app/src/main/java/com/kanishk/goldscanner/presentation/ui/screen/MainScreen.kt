@@ -18,8 +18,8 @@ fun MainScreen() {
     
     val tabs = listOf(
         BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_bar)),
-        BottomNavItem("Articles", Icons.Default.Info),
-        BottomNavItem("Scanner", Icons.Default.Search),
+        BottomNavItem("Article List", ImageVector.vectorResource(R.drawable.article_list)),
+        BottomNavItem("Article Detail", ImageVector.vectorResource(R.drawable.article_detail)),
         BottomNavItem("More", Icons.Default.Menu)
     )
     
