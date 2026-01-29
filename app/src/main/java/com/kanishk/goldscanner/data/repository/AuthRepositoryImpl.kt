@@ -3,6 +3,7 @@ package com.kanishk.goldscanner.data.repository
 import com.kanishk.goldscanner.domain.repository.AuthRepository
 import com.kanishk.goldscanner.data.network.service.AuthApiService
 import com.kanishk.goldscanner.data.network.ApiException
+import com.kanishk.goldscanner.data.network.NetworkConfig
 import com.kanishk.goldscanner.data.model.request.LoginRequest
 import com.kanishk.goldscanner.data.model.response.LoginResponse
 import com.kanishk.goldscanner.data.model.response.UserInfo
@@ -15,7 +16,8 @@ import kotlinx.serialization.encodeToString
 
 class AuthRepositoryImpl(
     private val authApiService: AuthApiService,
-    private val localStorage: LocalStorage
+    private val localStorage: LocalStorage,
+    private val networkConfig: NetworkConfig
 ) : AuthRepository {
     
     override suspend fun login(username: String, password: String): Result<LoginResponse> {
@@ -66,25 +68,21 @@ class AuthRepositoryImpl(
     
     override suspend fun refreshToken(): Result<Boolean> {
         return try {
-            val refreshToken = localStorage.getString(LocalStorage.StorageKey.REFRESH_TOKEN)
-                ?: return Result.Error(ErrorResponse("No refresh token found"))
-            
-            if (JWTTokenUtils.isTokenExpired(refreshToken)) {
-                clearUserSession()
-                return Result.Error(ErrorResponse("Refresh token expired"))
-            }
-            
-            val response = authApiService.refreshToken(refreshToken)
-            val newAccessToken = response["accessToken"]
-            val newRefreshToken = response["refreshToken"]
-            
-            if (newAccessToken != null && newRefreshToken != null) {
-                localStorage.storeString(LocalStorage.StorageKey.ACCESS_TOKEN, newAccessToken)
-                localStorage.storeString(LocalStorage.StorageKey.REFRESH_TOKEN, newRefreshToken)
-                Result.Success(true)
-            } else {
-                clearUserSession()
-                Result.Error(ErrorResponse("Invalid token response"))
+            // Use the centralized TokenManager for token refresh
+            val tokenManager = networkConfig.getTokenManager()
+            when (val tokenResult = tokenManager.getValidAccessToken()) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    // Token is valid (either existing or refreshed)
+                    Result.Success(true)
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    // Token refresh failed
+                    clearUserSession()
+                    Result.Error(ErrorResponse(
+                        message = "Token refresh failed",
+                        details = tokenResult.message
+                    ))
+                }
             }
         } catch (e: Exception) {
             clearUserSession()
@@ -96,21 +94,8 @@ class AuthRepositoryImpl(
     }
     
     override suspend fun isUserLoggedIn(): Boolean {
-        val isLoggedIn = localStorage.getBoolean(LocalStorage.StorageKey.IS_LOGGED_IN) ?: false
-        val accessToken = localStorage.getString(LocalStorage.StorageKey.ACCESS_TOKEN)
-        
-        if (!isLoggedIn || accessToken == null) {
-            return false
-        }
-        
-        // Check if access token is still valid
-        if (JWTTokenUtils.isTokenExpired(accessToken)) {
-            // Try to refresh token
-            val refreshResult = refreshToken()
-            return refreshResult is Result.Success
-        }
-        
-        return true
+        // Use the centralized TokenManager to check authentication status
+        return networkConfig.getTokenManager().isAuthenticated()
     }
     
     override suspend fun getCurrentUser(): UserInfo? {

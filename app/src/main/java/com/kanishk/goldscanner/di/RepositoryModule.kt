@@ -5,6 +5,6 @@ import com.kanishk.goldscanner.data.repository.AuthRepositoryImpl
 import com.kanishk.goldscanner.domain.repository.AuthRepository
 
 val repositoryModule = module {
-    single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<com.kanishk.goldscanner.domain.repository.GoldRateRepository> { com.kanishk.goldscanner.data.repository.GoldRateRepositoryImpl(get()) }
 }
