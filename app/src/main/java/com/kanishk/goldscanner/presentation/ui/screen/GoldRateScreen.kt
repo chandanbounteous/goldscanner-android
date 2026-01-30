@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,14 +41,15 @@ fun GoldRateScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
         // Header
         Text(
             text = "Gold Rates",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(bottom = 8.dp)
         )
         
         when {
@@ -86,7 +89,10 @@ private fun GoldRateContent(
     goldRateData: com.kanishk.goldscanner.data.model.response.GoldRateResponse
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
     ) {
         // Date information
         Card(
@@ -101,7 +107,7 @@ private fun GoldRateContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -130,7 +136,7 @@ private fun GoldRateContent(
                 Box(
                     modifier = Modifier
                         .width(1.dp)
-                        .height(60.dp)
+                        .height(40.dp)
                         .background(
                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
                         )
@@ -152,7 +158,7 @@ private fun GoldRateContent(
                     
                     Text(
                         text = NepaliDateFormatter.formatNepaliDate(goldRateData.date),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         textAlign = TextAlign.End

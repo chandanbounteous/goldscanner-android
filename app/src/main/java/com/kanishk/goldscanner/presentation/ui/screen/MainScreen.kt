@@ -18,14 +18,16 @@ fun MainScreen() {
     
     val tabs = listOf(
         BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_bar)),
-        BottomNavItem("Article List", ImageVector.vectorResource(R.drawable.article_list)),
-        BottomNavItem("Article Detail", ImageVector.vectorResource(R.drawable.article_detail)),
+        BottomNavItem("Item List", ImageVector.vectorResource(R.drawable.article_list)),
+        BottomNavItem("Item Detail", ImageVector.vectorResource(R.drawable.article_detail)),
         BottomNavItem("More", Icons.Default.Menu)
     )
     
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
                 tabs.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = {
@@ -60,48 +62,54 @@ fun MainScreen() {
 @Composable
 fun ArticlesTabScreen() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Text(
             text = "Articles",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Gold news and articles will be displayed here")
+        Text(
+            text = "Gold news and articles will be displayed here",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 }
 
 @Composable
 fun ScannerTabScreen() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Text(
             text = "Scanner",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Scanner functionality will be implemented here")
+        Text(
+            text = "Scanner functionality will be implemented here",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 }
 
 @Composable
 fun MoreTabScreen() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Text(
             text = "More",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Settings and more options")
+        Text(
+            text = "Settings and more options",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 }
 
