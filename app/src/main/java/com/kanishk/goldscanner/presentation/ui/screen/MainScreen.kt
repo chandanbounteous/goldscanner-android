@@ -61,20 +61,7 @@ fun MainScreen() {
 
 @Composable
 fun ArticlesTabScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "Articles",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Gold news and articles will be displayed here",
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
+    ArticleListScreen()
 }
 
 @Composable

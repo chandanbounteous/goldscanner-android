@@ -8,4 +8,5 @@ val useCaseModule = module {
     factory { LoginUseCase(get()) }
     factory { CheckLoginStatusUseCase(get()) }
     factory { com.kanishk.goldscanner.domain.usecase.GetCurrentGoldRateUseCase(get()) }
+    factory { com.kanishk.goldscanner.domain.usecase.GetGoldArticlesUseCase(get()) }
 }

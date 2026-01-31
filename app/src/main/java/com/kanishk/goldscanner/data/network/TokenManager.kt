@@ -29,7 +29,7 @@ class TokenManager(
     suspend fun getValidAccessToken(): TokenResult {
         return tokenMutex.withLock {
             // Step 1 & 2: Fetch ACCESS_TOKEN from local storage
-            val accessToken = localStorage.getString(LocalStorage.StorageKey.ACCESS_TOKEN)
+            val accessToken = localStorage.getValue<String>(LocalStorage.StorageKey.ACCESS_TOKEN)
             if (accessToken == null) {
                 return@withLock TokenResult.Error("Session expired. Please login again.")
             }
@@ -40,7 +40,7 @@ class TokenManager(
             }
             
             // Step 5 & 6: Access token expired, fetch REFRESH_TOKEN
-            val refreshToken = localStorage.getString(LocalStorage.StorageKey.REFRESH_TOKEN)
+            val refreshToken = localStorage.getValue<String>(LocalStorage.StorageKey.REFRESH_TOKEN)
             if (refreshToken == null) {
                 return@withLock TokenResult.Error("Session expired. Please login again.")
             }
@@ -94,7 +94,7 @@ class TokenManager(
                         Log.d(TAG, "refreshAccessToken: Storing new access token in local storage")
                         
                         // Store new access token (refresh token stays the same)
-                        localStorage.storeString(LocalStorage.StorageKey.ACCESS_TOKEN, refreshResponse.accessToken)
+                        localStorage.save(LocalStorage.StorageKey.ACCESS_TOKEN, refreshResponse.accessToken)
                         
                         Log.d(TAG, "refreshAccessToken: Token refresh successful")
                         TokenResult.Success(refreshResponse.accessToken)
@@ -120,9 +120,9 @@ class TokenManager(
                             Log.d(TAG, "refreshAccessToken: Storing new access token in local storage")
                             
                             // Store new access token (refresh token might not change)
-                            localStorage.storeString(LocalStorage.StorageKey.ACCESS_TOKEN, newAccessToken)
+                            localStorage.save(LocalStorage.StorageKey.ACCESS_TOKEN, newAccessToken)
                             if (newRefreshToken != null) {
-                                localStorage.storeString(LocalStorage.StorageKey.REFRESH_TOKEN, newRefreshToken)
+                                localStorage.save(LocalStorage.StorageKey.REFRESH_TOKEN, newRefreshToken)
                             }
                             
                             Log.d(TAG, "refreshAccessToken: Token refresh successful")
@@ -156,7 +156,7 @@ class TokenManager(
     fun clearAuthTokens() {
         localStorage.remove(LocalStorage.StorageKey.ACCESS_TOKEN)
         localStorage.remove(LocalStorage.StorageKey.REFRESH_TOKEN)
-        localStorage.storeBoolean(LocalStorage.StorageKey.IS_LOGGED_IN, false)
+        localStorage.save(LocalStorage.StorageKey.IS_LOGGED_IN, false)
     }
     
     /**

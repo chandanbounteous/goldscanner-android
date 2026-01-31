@@ -1,0 +1,133 @@
+package com.kanishk.goldscanner.utils
+
+import com.kanishk.goldscanner.data.model.GoldArticleCalculation
+import com.kanishk.goldscanner.data.model.LookupEntryForWastageAndMakingCharge
+import kotlin.math.round
+
+object GoldArticleCalculator {
+    
+    private const val LUXURY_TAX_PERCENT = 0.02
+    private const val ONE_TOLA_IN_GMS = 11.664
+    private const val MAX_ARTICLE_WEIGHT = 999.0
+    private const val KARAT_24 = 24
+    private const val KARAT_22 = 22
+    private const val PURITY_FACTOR_24_KARAT = 1.0
+    private const val PURITY_FACTOR_22_KARAT = 0.92
+
+    private val lookupTable = listOf(
+        LookupEntryForWastageAndMakingCharge(0.0, 1.0, 0, { 0.39 }, { 1200.0 }),
+        LookupEntryForWastageAndMakingCharge(1.0, 2.0, 0, { 0.65 }, { 1500.0 }),
+        LookupEntryForWastageAndMakingCharge(2.0, 3.0, 0, { 0.70 }, { 1700.0 }),
+        LookupEntryForWastageAndMakingCharge(3.0, 4.0, 0, { 0.75 }, { 1800.0 }),
+        LookupEntryForWastageAndMakingCharge(4.0, 6.0, 0, { 0.95 }, { 2200.0 }),
+        LookupEntryForWastageAndMakingCharge(6.0, 7.0, 0, { 1.00 }, { 3500.0 }),
+        LookupEntryForWastageAndMakingCharge(7.0, MAX_ARTICLE_WEIGHT, KARAT_24, { it * 0.07 }, { it * 0.01 }),
+        LookupEntryForWastageAndMakingCharge(7.0, ONE_TOLA_IN_GMS, KARAT_22, { it * 0.07 }, { it * 0.01 }),
+        LookupEntryForWastageAndMakingCharge(
+            ONE_TOLA_IN_GMS,
+            MAX_ARTICLE_WEIGHT, 
+            KARAT_22, 
+            { it * 0.09 }, 
+            { it * 0.01 }
+        )
+    )
+
+    /**
+     * Calculate all gold article costs based on current gold rate and article properties
+     */
+    fun calculateArticleCosts(
+        currentGoldRate24KPerTola: Double,
+        netWeight: Double,
+        karat: Int,
+        addOnCost: Double,
+        discount: Double = 0.0
+    ): GoldArticleCalculation {
+        
+        // Step 1: Calculate wastage
+        val wastage = calculateWastage(netWeight, karat)
+        
+        // Step 2: Calculate total weight (net weight + wastage)
+        val totalWeight = netWeight + wastage
+        
+        // Step 3: Calculate cost as per weight, rate and karat
+        val articleCostAsPerWeightRateAndKarat = calculateArticleCostAsPerWeightRateAndKarat(
+            totalWeight, karat, currentGoldRate24KPerTola
+        )
+        
+        // Step 4: Calculate making charge (needs total taxable amount for some entries)
+        val tempTotalForMakingCharge = articleCostAsPerWeightRateAndKarat + addOnCost
+        val makingCharge = calculateMakingCharge(netWeight, karat, tempTotalForMakingCharge)
+        
+        // Step 5: Calculate total cost before tax
+        val totalCostBeforeTax = calculateTotalCostBeforeTax(
+            articleCostAsPerWeightRateAndKarat + addOnCost, 
+            makingCharge, 
+            discount
+        )
+        
+        // Step 6: Calculate luxury tax
+        val luxuryTax = calculateLuxuryTax(totalCostBeforeTax)
+        
+        // Step 7: Calculate total cost after tax
+        val totalCostAfterTax = calculateTotalCostAfterTax(totalCostBeforeTax, luxuryTax)
+        
+        return GoldArticleCalculation(
+            wastage = roundToTwoDecimalPlaces(wastage),
+            articleCostAsPerWeightRateAndKarat = roundToTwoDecimalPlaces(articleCostAsPerWeightRateAndKarat),
+            makingCharge = roundToTwoDecimalPlaces(makingCharge),
+            totalCostBeforeTax = totalCostBeforeTax,
+            luxuryTax = luxuryTax,
+            totalCostAfterTax = totalCostAfterTax
+        )
+    }
+
+    private fun calculateWastage(netWeight: Double, karat: Int): Double {
+        val matchedEntry = lookupTable.firstOrNull { entry ->
+            netWeight >= entry.minNetWeight &&
+                    netWeight < entry.maxNetWeight &&
+                    (karat == entry.karat || entry.karat == 0)
+        }
+        return matchedEntry?.wastage?.invoke(netWeight) ?: 0.0
+    }
+
+    private fun calculateArticleCostAsPerWeightRateAndKarat(
+        totalWeight: Double,
+        karat: Int,
+        goldRatePerTola: Double
+    ): Double {
+        val weightInTolas = totalWeight / ONE_TOLA_IN_GMS
+        val purityFactor = if (karat == KARAT_24) PURITY_FACTOR_24_KARAT else PURITY_FACTOR_22_KARAT
+        val cost = weightInTolas * purityFactor * goldRatePerTola
+        return cost
+    }
+
+    private fun calculateMakingCharge(netWeight: Double, karat: Int, totalTaxableAmount: Double): Double {
+        val matchedEntry = lookupTable.firstOrNull { entry ->
+            netWeight >= entry.minNetWeight &&
+                    netWeight < entry.maxNetWeight &&
+                    (karat == entry.karat || entry.karat == 0)
+        }
+        return matchedEntry?.makingCharge?.invoke(totalTaxableAmount) ?: 0.0
+    }
+
+    private fun calculateTotalCostBeforeTax(
+        costAsPerGoldRateAndKarat: Double,
+        makingCharge: Double,
+        discount: Double
+    ): Double {
+        val totalTaxableAmount = costAsPerGoldRateAndKarat + makingCharge - discount
+        return roundToTwoDecimalPlaces(totalTaxableAmount)
+    }
+
+    private fun calculateLuxuryTax(totalCostBeforeTax: Double): Double =
+        roundToTwoDecimalPlaces(LUXURY_TAX_PERCENT * totalCostBeforeTax)
+
+    private fun calculateTotalCostAfterTax(
+        totalCostBeforeTax: Double,
+        luxuryTaxAmount: Double
+    ): Double = roundToTwoDecimalPlaces(totalCostBeforeTax + luxuryTaxAmount)
+
+    private fun roundToTwoDecimalPlaces(value: Double): Double {
+        return round(value * 100) / 100
+    }
+}

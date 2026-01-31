@@ -88,7 +88,7 @@ class NetworkConfig(
     private fun clearAuthTokens() {
         localStorage.remove(LocalStorage.StorageKey.ACCESS_TOKEN)
         localStorage.remove(LocalStorage.StorageKey.REFRESH_TOKEN)
-        localStorage.storeBoolean(LocalStorage.StorageKey.IS_LOGGED_IN, false)
+        localStorage.save(LocalStorage.StorageKey.IS_LOGGED_IN, false)
     }
 }
 

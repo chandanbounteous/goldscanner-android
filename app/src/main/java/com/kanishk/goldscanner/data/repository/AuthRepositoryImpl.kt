@@ -100,7 +100,7 @@ class AuthRepositoryImpl(
     
     override suspend fun getCurrentUser(): UserInfo? {
         return try {
-            val userInfoJson = localStorage.getString(LocalStorage.StorageKey.USER_INFO)
+            val userInfoJson = localStorage.getValue<String>(LocalStorage.StorageKey.USER_INFO)
             if (userInfoJson != null) {
                 Json.decodeFromString<UserInfo>(userInfoJson)
             } else null
@@ -110,16 +110,16 @@ class AuthRepositoryImpl(
     }
     
     override suspend fun saveUserSession(loginResponse: LoginResponse) {
-        localStorage.storeString(LocalStorage.StorageKey.ACCESS_TOKEN, loginResponse.accessToken)
-        localStorage.storeString(LocalStorage.StorageKey.REFRESH_TOKEN, loginResponse.refreshToken)
-        localStorage.storeString(LocalStorage.StorageKey.USER_INFO, Json.encodeToString(loginResponse.user))
-        localStorage.storeBoolean(LocalStorage.StorageKey.IS_LOGGED_IN, true)
+        localStorage.save(LocalStorage.StorageKey.ACCESS_TOKEN, loginResponse.accessToken)
+        localStorage.save(LocalStorage.StorageKey.REFRESH_TOKEN, loginResponse.refreshToken)
+        localStorage.save(LocalStorage.StorageKey.USER_INFO, Json.encodeToString(loginResponse.user))
+        localStorage.save(LocalStorage.StorageKey.IS_LOGGED_IN, true)
     }
     
     override suspend fun clearUserSession() {
         localStorage.remove(LocalStorage.StorageKey.ACCESS_TOKEN)
         localStorage.remove(LocalStorage.StorageKey.REFRESH_TOKEN)
         localStorage.remove(LocalStorage.StorageKey.USER_INFO)
-        localStorage.storeBoolean(LocalStorage.StorageKey.IS_LOGGED_IN, false)
+        localStorage.save(LocalStorage.StorageKey.IS_LOGGED_IN, false)
     }
 }

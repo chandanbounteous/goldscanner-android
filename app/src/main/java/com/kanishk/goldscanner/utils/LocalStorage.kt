@@ -2,6 +2,8 @@ package com.kanishk.goldscanner.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class LocalStorage(context: Context) {
     
@@ -12,43 +14,56 @@ class LocalStorage(context: Context) {
     private val preferences: SharedPreferences = 
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     
-    fun storeString(key: StorageKey, value: String) {
-        preferences.edit().putString(key.name, value).apply()
+    // Generic method to save primitive types
+    internal fun <T> save(key: StorageKey, value: T) {
+        val editor = preferences.edit()
+        when (value) {
+            is String -> editor.putString(key.name, value)
+            is Int -> editor.putInt(key.name, value)
+            is Boolean -> editor.putBoolean(key.name, value)
+            is Float -> editor.putFloat(key.name, value)
+            is Long -> editor.putLong(key.name, value)
+            else -> throw IllegalArgumentException("Unsupported type: ${value?.javaClass?.simpleName}")
+        }
+        editor.apply()
+    }
+
+    // Generic method to get primitive types
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T> get(key: StorageKey, clazz: Class<T>): T? {
+        return when (clazz) {
+            String::class.java -> preferences.getString(key.name, null) as T?
+            Int::class.java -> if (preferences.contains(key.name)) preferences.getInt(key.name, 0) as T else null
+            Integer::class.java -> if (preferences.contains(key.name)) preferences.getInt(key.name, 0) as T else null
+            Boolean::class.java -> if (preferences.contains(key.name)) preferences.getBoolean(key.name, false) as T else null
+            Float::class.java -> if (preferences.contains(key.name)) preferences.getFloat(key.name, 0f) as T else null
+            Long::class.java -> if (preferences.contains(key.name)) preferences.getLong(key.name, 0L) as T else null
+            else -> null
+        }
+    }
+
+    // Inline convenience methods for getting values
+    internal inline fun <reified T> getValue(key: StorageKey): T? = get(key, T::class.java)
+
+    // Generic method to save objects (serialize to JSON)
+    internal fun <T> saveObject(key: StorageKey, value: T) {
+        val gson = Gson()
+        val json = gson.toJson(value)
+        preferences.edit().putString(key.name, json).apply()
+    }
+
+    // Generic method to get objects (deserialize from JSON)
+    internal inline fun <reified T> getObject(key: StorageKey): T? {
+        val json = preferences.getString(key.name, null) ?: return null
+        val gson = Gson()
+        return try {
+            gson.fromJson(json, object : TypeToken<T>() {}.type)
+        } catch (e: Exception) {
+            null
+        }
     }
     
-    fun getString(key: StorageKey): String? {
-        return preferences.getString(key.name, null)
-    }
-    
-    fun storeBoolean(key: StorageKey, value: Boolean) {
-        preferences.edit().putBoolean(key.name, value).apply()
-    }
-    
-    fun getBoolean(key: StorageKey): Boolean? {
-        return if (preferences.contains(key.name)) {
-            preferences.getBoolean(key.name, false)
-        } else null
-    }
-    
-    fun storeFloat(key: StorageKey, value: Float) {
-        preferences.edit().putFloat(key.name, value).apply()
-    }
-    
-    fun getFloat(key: StorageKey): Float? {
-        return if (preferences.contains(key.name)) {
-            preferences.getFloat(key.name, 0f)
-        } else null
-    }
-    
-    fun storeLong(key: StorageKey, value: Long) {
-        preferences.edit().putLong(key.name, value).apply()
-    }
-    
-    fun getLong(key: StorageKey): Long? {
-        return if (preferences.contains(key.name)) {
-            preferences.getLong(key.name, 0L)
-        } else null
-    }
+
     
     fun remove(key: StorageKey) {
         preferences.edit().remove(key.name).apply()
@@ -67,6 +82,10 @@ class LocalStorage(context: Context) {
         REFRESH_TOKEN,
         USER_INFO,
         API_BASE_URL,
-        SPLASH_DURATION
+        SPLASH_DURATION,
+        CURRENT_GOLD_RATE_INFO,
+        GOLD_RATE_UPDATE_HOUR,
+        DEFAULT_ARTICLES_OFFSET,
+        DEFAULT_ARTICLES_LIMIT
     }
 }
