@@ -8,9 +8,7 @@ import com.goldscanner.data.common.ErrorResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import com.kanishk.goldscanner.utils.LocalStorage
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import com.kanishk.goldscanner.utils.NepaliDateUtils
 
 class GoldRateRepositoryImpl(
     private val goldRateApiService: GoldRateApiService,
@@ -27,16 +25,18 @@ class GoldRateRepositoryImpl(
                 return fetchAndCacheGoldRate()
             }
             
-            // Check current Nepali time
-            val currentNepaliTime = getCurrentNepaliTime()
-            val updateHour = getGoldRateUpdateHour()
+            // Get the cached Nepali date from the cached gold rate
+            val cachedNepaliDate = cachedGoldRate.date
             
-            // If current time is on or after update hour (default 12 PM), return cached data
-            if (currentNepaliTime.hour >= updateHour) {
-                Result.Success(cachedGoldRate)
-            } else {
-                // Before update hour, fetch fresh data
+            // Get current Nepali date
+            val currentNepaliDate = NepaliDateUtils.getCurrentNepaliDate()
+            
+            // If current date is later than cached date, fetch fresh data
+            if (NepaliDateUtils.isAfter(currentNepaliDate, cachedNepaliDate)) {
                 fetchAndCacheGoldRate()
+            } else {
+                // Current date is same or before cached date, return cached data
+                Result.Success(cachedGoldRate)
             }
         } catch (e: Exception) {
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
@@ -67,21 +67,5 @@ class GoldRateRepositoryImpl(
         } catch (e: Exception) {
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }
-    }
-    
-    private fun getCurrentNepaliTime(): ZonedDateTime {
-        // Nepal timezone is UTC+05:45
-        val nepaliZone = ZoneId.of("Asia/Kathmandu")
-        return ZonedDateTime.now(nepaliZone)
-    }
-    
-    private fun getGoldRateUpdateHour(): Int {
-        // Get configurable update hour, default to 12 (12 PM)
-        return localStorage.getValue<Int>(LocalStorage.StorageKey.GOLD_RATE_UPDATE_HOUR) ?: 12
-    }
-    
-    // Method to set the configurable update hour
-    fun setGoldRateUpdateHour(hour: Int) {
-        localStorage.save(LocalStorage.StorageKey.GOLD_RATE_UPDATE_HOUR, hour)
     }
 }
