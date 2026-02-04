@@ -26,6 +26,18 @@ data class ErrorResponse(
             message = message
         )
         
+        fun authenticationError(message: String = "Authentication failed") = ErrorResponse(
+            responseCode = 401,
+            responseMessage = message,
+            message = message
+        )
+        
+        fun clientError(code: Int, message: String, details: String? = null) = ErrorResponse(
+            responseCode = code,
+            responseMessage = message,
+            message = details ?: message
+        )
+        
         fun noInternetError() = ErrorResponse(
             responseCode = -2,
             responseMessage = "No internet connection",

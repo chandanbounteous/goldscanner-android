@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -13,8 +14,11 @@ import com.kanishk.goldscanner.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
-    var selectedTab by remember { mutableIntStateOf(0) }
+fun MainScreen(
+    initialSelectedTab: Int = 0,
+    onNavigateToArticleDetail: () -> Unit = {}
+) {
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialSelectedTab) }
     
     val tabs = listOf(
         BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_bar)),
@@ -51,7 +55,7 @@ fun MainScreen() {
         ) {
             when (selectedTab) {
                 0 -> GoldRateScreen()
-                1 -> ArticlesTabScreen()
+                1 -> ArticlesTabScreen(onNavigateToArticleDetail)
                 2 -> BasketTabScreen()
                 3 -> MoreTabScreen()
             }
@@ -60,8 +64,8 @@ fun MainScreen() {
 }
 
 @Composable
-fun ArticlesTabScreen() {
-    ArticleListScreen()
+fun ArticlesTabScreen(onNavigateToArticleDetail: () -> Unit = {}) {
+    ArticleListScreen(onNavigateToArticleDetail = onNavigateToArticleDetail)
 }
 
 @Composable

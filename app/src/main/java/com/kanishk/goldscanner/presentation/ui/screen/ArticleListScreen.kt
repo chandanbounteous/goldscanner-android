@@ -20,7 +20,8 @@ import com.kanishk.goldscanner.presentation.ui.component.ArticleListItem
 @Composable
 fun ArticleListScreen(
     modifier: Modifier = Modifier,
-    viewModel: ArticleListViewModel = koinViewModel()
+    viewModel: ArticleListViewModel = koinViewModel(),
+    onNavigateToArticleDetail: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
@@ -62,7 +63,7 @@ fun ArticleListScreen(
         ArticleSearchBar(
             searchQuery = uiState.searchQuery,
             onSearchQueryChange = viewModel::onSearchQueryChange,
-            onScannerClick = viewModel::onScannerClick
+            onScannerClick = onNavigateToArticleDetail
         )
         
         // Articles List

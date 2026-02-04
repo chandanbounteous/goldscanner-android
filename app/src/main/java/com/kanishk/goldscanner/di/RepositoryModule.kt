@@ -9,5 +9,5 @@ import com.kanishk.goldscanner.domain.repository.GoldArticleRepository
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<com.kanishk.goldscanner.domain.repository.GoldRateRepository> { com.kanishk.goldscanner.data.repository.GoldRateRepositoryImpl(get(), get()) }
-    single<GoldArticleRepository> { GoldArticleRepositoryImpl(get(), get(), get()) }
+    single<GoldArticleRepository> { GoldArticleRepositoryImpl(get(), get(), get(), get()) }
 }

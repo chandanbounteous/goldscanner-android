@@ -22,7 +22,7 @@ data class GoldArticle(
     val serialNumber: String,
     val issueDate: String,
     val issueDateNepali: NepaliDate,
-    val carigarId: String,
+    val carigarId: String? = null,
     val netWeight: Double,
     val grossWeight: Double,
     val stoneWeight: Double,
@@ -30,7 +30,7 @@ data class GoldArticle(
     val updatedAt: String,
     val karat: Int,
     val addOnCost: Double,
-    val carigar: CarigarInfo
+    val carigar: CarigarInfo? = null
 )
 
 @Serializable

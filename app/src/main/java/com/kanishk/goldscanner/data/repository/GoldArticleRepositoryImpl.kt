@@ -1,9 +1,12 @@
 package com.kanishk.goldscanner.data.repository
 
 import com.kanishk.goldscanner.data.network.service.GoldRateApiService
+import com.kanishk.goldscanner.data.network.service.GoldArticleApiService
 import com.kanishk.goldscanner.domain.repository.GoldArticleRepository
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
+import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
+import com.kanishk.goldscanner.data.model.response.GoldArticleResponse
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.GoldArticlesResponse
 import com.kanishk.goldscanner.utils.LocalStorage
@@ -15,6 +18,7 @@ import com.kanishk.goldscanner.data.network.AuthenticationException
 
 class GoldArticleRepositoryImpl(
     private val goldRateApiService: GoldRateApiService,
+    private val goldArticleApiService: GoldArticleApiService,
     private val goldRateRepository: GoldRateRepository,
     private val localStorage: LocalStorage
 ) : GoldArticleRepository {
@@ -66,6 +70,21 @@ class GoldArticleRepositoryImpl(
                 responseMessage = e.message,
                 message = e.body
             ))
+        } catch (e: Exception) {
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
+
+    override suspend fun createArticle(request: CreateArticleRequest): Result<GoldArticleResponse> {
+        return try {
+            val response = goldArticleApiService.createArticle(request)
+            Result.Success(response)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
         } catch (e: Exception) {
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }

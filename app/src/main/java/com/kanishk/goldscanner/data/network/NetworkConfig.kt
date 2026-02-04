@@ -41,8 +41,8 @@ class NetworkConfig(
             }
             
             install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
+                logger = Logger.ANDROID
+                level = LogLevel.ALL
             }
             
             install(HttpTimeout) {

@@ -93,7 +93,7 @@ fun ArticleSearchBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Scan QR Code",
+                contentDescription = "Add gold article",
                 modifier = Modifier.size(24.dp)
             )
         }
