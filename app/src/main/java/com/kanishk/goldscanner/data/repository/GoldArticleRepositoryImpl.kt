@@ -6,7 +6,6 @@ import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.GoldArticlesResponse
-import com.kanishk.goldscanner.data.model.response.GoldArticlesBody
 import com.kanishk.goldscanner.utils.LocalStorage
 import com.kanishk.goldscanner.utils.GoldArticleCalculator
 import com.goldscanner.data.common.Result
@@ -40,7 +39,7 @@ class GoldArticleRepositoryImpl(
             
             // Calculate costs for each article
             val articlesWithCalculation = articlesResponse.body.articles.map { article ->
-                val calculation = GoldArticleCalculator.calculateArticleCosts(
+                val calculation = GoldArticleCalculator.calculateArticleCost(
                     currentGoldRate24KPerTola = currentGoldRate24K,
                     netWeight = article.netWeight,
                     karat = article.karat,

@@ -18,8 +18,8 @@ fun MainScreen() {
     
     val tabs = listOf(
         BottomNavItem("Gold Rate", ImageVector.vectorResource(R.drawable.gold_bar)),
-        BottomNavItem("Item List", ImageVector.vectorResource(R.drawable.article_list)),
-        BottomNavItem("Item Detail", ImageVector.vectorResource(R.drawable.article_detail)),
+        BottomNavItem("Articles", ImageVector.vectorResource(R.drawable.article_list)),
+        BottomNavItem("Basket", ImageVector.vectorResource(R.drawable.gold_basket)),
         BottomNavItem("More", Icons.Default.Menu)
     )
     
@@ -52,7 +52,7 @@ fun MainScreen() {
             when (selectedTab) {
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen()
-                2 -> ScannerTabScreen()
+                2 -> BasketTabScreen()
                 3 -> MoreTabScreen()
             }
         }
@@ -65,18 +65,18 @@ fun ArticlesTabScreen() {
 }
 
 @Composable
-fun ScannerTabScreen() {
+fun BasketTabScreen() {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         Text(
-            text = "Scanner",
+            text = "Basket",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Scanner functionality will be implemented here",
+            text = "Your gold basket items will be displayed here",
             modifier = Modifier.padding(horizontal = 16.dp)
         )
     }

@@ -7,7 +7,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test calculation for small article under 1 gram`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0, // NPR per tola
             netWeight = 0.5, // grams
             karat = 24,
@@ -26,7 +26,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test calculation for 22K gold article`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0,
             netWeight = 15.0, // grams (above tola limit)
             karat = 22,
@@ -48,7 +48,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test calculation with discount`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0,
             netWeight = 5.0,
             karat = 24,
@@ -63,7 +63,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test luxury tax calculation`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 100000.0,
             netWeight = 2.5,
             karat = 24,
@@ -81,7 +81,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test fixed making charge for small articles`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0,
             netWeight = 1.5, // Should get fixed making charge of 1500
             karat = 24,
@@ -95,7 +95,7 @@ class GoldArticleCalculatorTest {
 
     @Test
     fun `test percentage-based making charge for large articles`() {
-        val result = GoldArticleCalculator.calculateArticleCosts(
+        val result = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0,
             netWeight = 50.0, // Large article, should get percentage-based making charge
             karat = 24,

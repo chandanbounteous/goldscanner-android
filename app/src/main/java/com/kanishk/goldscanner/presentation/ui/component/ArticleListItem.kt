@@ -99,7 +99,7 @@ fun ArticleListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = formatCurrency(article.calculation.totalCostAfterTax),
+                    text = formatCurrency(article.calculation.finalEstimatedCost),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

@@ -6,7 +6,8 @@ data class GoldArticleCalculation(
     val makingCharge: Double,
     val totalCostBeforeTax: Double,
     val luxuryTax: Double,
-    val totalCostAfterTax: Double
+    val totalCostAfterTax: Double,
+    val finalEstimatedCost: Double
 )
 
 data class GoldArticleWithCalculation(

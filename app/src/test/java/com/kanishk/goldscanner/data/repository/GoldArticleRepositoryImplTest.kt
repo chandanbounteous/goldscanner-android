@@ -19,7 +19,7 @@ class GoldArticleRepositoryImplTest {
     @Test
     fun `test gold article calculator integration`() {
         // Test the calculator directly to ensure it works correctly
-        val calculation = GoldArticleCalculator.calculateArticleCosts(
+        val calculation = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = 150000.0,
             netWeight = 5.0,
             karat = 24,
@@ -45,7 +45,7 @@ class GoldArticleRepositoryImplTest {
         val addOnCost = 2000.0
         
         // Test 24K calculation
-        val calc24K = GoldArticleCalculator.calculateArticleCosts(
+        val calc24K = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = goldRate24K,
             netWeight = netWeight,
             karat = 24,
@@ -54,7 +54,7 @@ class GoldArticleRepositoryImplTest {
         )
         
         // Test 22K calculation
-        val calc22K = GoldArticleCalculator.calculateArticleCosts(
+        val calc22K = GoldArticleCalculator.calculateArticleCost(
             currentGoldRate24KPerTola = goldRate24K,
             netWeight = netWeight,
             karat = 22,

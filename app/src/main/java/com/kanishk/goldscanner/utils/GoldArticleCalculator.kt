@@ -35,7 +35,7 @@ object GoldArticleCalculator {
     /**
      * Calculate all gold article costs based on current gold rate and article properties
      */
-    fun calculateArticleCosts(
+    fun calculateArticleCost(
         currentGoldRate24KPerTola: Double,
         netWeight: Double,
         karat: Int,
@@ -55,12 +55,11 @@ object GoldArticleCalculator {
         )
         
         // Step 4: Calculate making charge (needs total taxable amount for some entries)
-        val tempTotalForMakingCharge = articleCostAsPerWeightRateAndKarat + addOnCost
-        val makingCharge = calculateMakingCharge(netWeight, karat, tempTotalForMakingCharge)
+        val makingCharge = calculateMakingCharge(netWeight, karat, articleCostAsPerWeightRateAndKarat)
         
         // Step 5: Calculate total cost before tax
         val totalCostBeforeTax = calculateTotalCostBeforeTax(
-            articleCostAsPerWeightRateAndKarat + addOnCost, 
+            articleCostAsPerWeightRateAndKarat,
             makingCharge, 
             discount
         )
@@ -71,13 +70,17 @@ object GoldArticleCalculator {
         // Step 7: Calculate total cost after tax
         val totalCostAfterTax = calculateTotalCostAfterTax(totalCostBeforeTax, luxuryTax)
         
+        // Step 8: Calculate final estimated cost
+        val finalEstimatedCost = totalCostAfterTax + addOnCost
+        
         return GoldArticleCalculation(
             wastage = roundToTwoDecimalPlaces(wastage),
             articleCostAsPerWeightRateAndKarat = roundToTwoDecimalPlaces(articleCostAsPerWeightRateAndKarat),
             makingCharge = roundToTwoDecimalPlaces(makingCharge),
             totalCostBeforeTax = totalCostBeforeTax,
             luxuryTax = luxuryTax,
-            totalCostAfterTax = totalCostAfterTax
+            totalCostAfterTax = totalCostAfterTax,
+            finalEstimatedCost = roundToTwoDecimalPlaces(finalEstimatedCost)
         )
     }
 

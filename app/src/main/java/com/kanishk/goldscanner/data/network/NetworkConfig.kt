@@ -20,7 +20,7 @@ class NetworkConfig(
 ) {
     
     companion object {
-        private const val BASE_URL = "http://192.168.1.3:3000/api/"
+        private const val BASE_URL = "http://192.168.1.4:3000/api/"
         private const val CONNECTION_TIMEOUT = 30000L
         private const val REQUEST_TIMEOUT = 30000L
         
