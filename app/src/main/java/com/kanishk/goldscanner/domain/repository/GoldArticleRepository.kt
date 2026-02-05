@@ -2,6 +2,7 @@ package com.kanishk.goldscanner.domain.repository
 
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
+import com.kanishk.goldscanner.data.model.request.UpdateArticleRequest
 import com.kanishk.goldscanner.data.model.response.GoldArticleResponse
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.goldscanner.data.common.Result
@@ -15,6 +16,8 @@ interface GoldArticleRepository {
     ): Result<Pair<List<GoldArticleWithCalculation>, PaginationInfo>>
     
     suspend fun createArticle(request: CreateArticleRequest): Result<GoldArticleResponse>
+    
+    suspend fun updateArticle(articleId: String, request: UpdateArticleRequest): Result<GoldArticleResponse>
     
     fun getDefaultOffset(): Int
     fun getDefaultLimit(): Int

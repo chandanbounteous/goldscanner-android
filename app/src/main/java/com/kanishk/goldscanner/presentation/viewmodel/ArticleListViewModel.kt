@@ -25,7 +25,7 @@ data class ArticleListUiState(
 )
 
 class ArticleListViewModel(
-    private val getGoldArticlesUseCase: GetGoldArticlesUseCase
+    private val goldArticleUseCase: GetGoldArticlesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ArticleListUiState())
@@ -53,7 +53,7 @@ class ArticleListViewModel(
             )
 
             val offset = if (isLoadMore) currentState.currentOffset + 1 else 0
-            val result = getGoldArticlesUseCase(
+            val result = goldArticleUseCase(
                 code = currentState.searchQuery,
                 offset = offset,
                 limit = currentState.currentLimit
@@ -111,14 +111,6 @@ class ArticleListViewModel(
     fun onRefresh() {
         _uiState.value = _uiState.value.copy(currentOffset = 0)
         loadArticles(isLoadMore = false)
-    }
-
-    fun onArticleClick(article: GoldArticleWithCalculation) {
-        // TODO: Navigate to article detail screen
-    }
-
-    fun onScannerClick() {
-        // TODO: Navigate to scanner screen
     }
 
     fun clearError() {

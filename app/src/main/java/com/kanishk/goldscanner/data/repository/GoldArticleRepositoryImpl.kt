@@ -6,6 +6,7 @@ import com.kanishk.goldscanner.domain.repository.GoldArticleRepository
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
+import com.kanishk.goldscanner.data.model.request.UpdateArticleRequest
 import com.kanishk.goldscanner.data.model.response.GoldArticleResponse
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.GoldArticlesResponse
@@ -78,6 +79,21 @@ class GoldArticleRepositoryImpl(
     override suspend fun createArticle(request: CreateArticleRequest): Result<GoldArticleResponse> {
         return try {
             val response = goldArticleApiService.createArticle(request)
+            Result.Success(response)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
+        } catch (e: Exception) {
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
+
+    override suspend fun updateArticle(articleId: String, request: UpdateArticleRequest): Result<GoldArticleResponse> {
+        return try {
+            val response = goldArticleApiService.updateArticle(articleId, request)
             Result.Success(response)
         } catch (e: AuthenticationException) {
             Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))

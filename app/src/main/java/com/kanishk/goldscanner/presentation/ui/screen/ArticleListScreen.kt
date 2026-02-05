@@ -12,7 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.runtime.remember
 import com.kanishk.goldscanner.presentation.viewmodel.ArticleListViewModel
+import com.kanishk.goldscanner.presentation.viewmodel.SharedEditArticleViewModel
+import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.presentation.ui.component.ArticleSearchBar
 import com.kanishk.goldscanner.presentation.ui.component.ArticleListItem
@@ -23,6 +26,8 @@ fun ArticleListScreen(
     viewModel: ArticleListViewModel = koinViewModel(),
     onNavigateToArticleDetail: () -> Unit = {}
 ) {
+    // Get shared instance from Koin - using static instance approach  
+    val sharedEditViewModel: SharedEditArticleViewModel = remember { SharedEditArticleViewModel.getInstance() }
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
@@ -135,7 +140,10 @@ fun ArticleListScreen(
                         ) { article ->
                             ArticleListItem(
                                 article = article,
-                                onClick = viewModel::onArticleClick
+                                onClick = { selectedArticle ->
+                                    sharedEditViewModel.selectArticleForEdit(selectedArticle)
+                                    onNavigateToArticleDetail()
+                                }
                             )
                         }
                         

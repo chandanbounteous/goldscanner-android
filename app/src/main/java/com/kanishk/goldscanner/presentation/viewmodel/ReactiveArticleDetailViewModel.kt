@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.goldscanner.data.common.Result
 import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
+import com.kanishk.goldscanner.data.model.request.UpdateArticleRequest
 import com.kanishk.goldscanner.data.model.response.GoldRateResponse
+import com.kanishk.goldscanner.data.model.response.GoldArticle
 import com.kanishk.goldscanner.domain.usecase.CreateArticleUseCase
+import com.kanishk.goldscanner.domain.usecase.UpdateArticleUseCase
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailMode
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailState
@@ -21,7 +24,8 @@ import kotlinx.coroutines.launch
 
 class ReactiveArticleDetailViewModel(
     private val goldRateRepository: GoldRateRepository,
-    private val createArticleUseCase: CreateArticleUseCase
+    private val createArticleUseCase: CreateArticleUseCase,
+    private val updateArticleUseCase: UpdateArticleUseCase
 ) : ViewModel() {
     
     // Reactive calculation engine
@@ -37,6 +41,9 @@ class ReactiveArticleDetailViewModel(
     
     // Gold rate response cache
     private var goldRateResponse: GoldRateResponse? = null
+    
+    // Article being edited (for UPDATE_INDEPENDENT mode)
+    private var editingArticle: GoldArticle? = null
     
     init {
         loadGoldRates()
@@ -68,6 +75,14 @@ class ReactiveArticleDetailViewModel(
                     // Update gold rate in reactive article
                     val goldRate24K = GoldRateHelper.getGoldRateForKarat(result.data, 24)
                     updateReactiveField("goldRate24KPerTola", goldRate24K)
+                    
+                    // If we have an article to edit and this is the first time loading gold rates,
+                    // populate the fields now
+                    editingArticle?.let { article ->
+                        if (_uiState.value.mode == ArticleDetailMode.UPDATE_INDEPENDENT) {
+                            populateFieldsFromArticle(article)
+                        }
+                    }
                     
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
@@ -193,6 +208,37 @@ class ReactiveArticleDetailViewModel(
     // Public API methods for UI
     fun setMode(mode: ArticleDetailMode) {
         _uiState.value = _uiState.value.copy(mode = mode)
+    }
+    
+    /**
+     * Populate the article fields for editing (UPDATE_INDEPENDENT mode)
+     */
+    fun populateArticleForEdit(article: GoldArticle) {
+        editingArticle = article
+        
+        // Set mode first
+        setMode(ArticleDetailMode.UPDATE_INDEPENDENT)
+        
+        // If gold rates are already loaded, populate immediately
+        // Otherwise, population will happen when gold rates are loaded
+        if (goldRateResponse != null) {
+            populateFieldsFromArticle(article)
+        }
+    }
+    
+    private fun populateFieldsFromArticle(article: GoldArticle) {
+        // Update reactive fields with article values
+        updateReactiveField("articleCode", article.articleCode)
+        updateReactiveField("karat", article.karat)
+        updateReactiveField("netWeight", article.netWeight ?: 0.0)
+        updateReactiveField("grossWeight", article.grossWeight ?: 0.0)
+        updateReactiveField("addOnCost", article.addOnCost)
+        
+        // Update gold rate for the article's karat
+        goldRateResponse?.let { response ->
+            val goldRateForKarat = GoldRateHelper.getGoldRateForKarat(response, article.karat)
+            updateReactiveField("goldRate24KPerTola", goldRateForKarat)
+        }
     }
     
     fun updateKarat(karat: Int) {
@@ -334,40 +380,82 @@ class ReactiveArticleDetailViewModel(
             _uiState.value = currentState.copy(isLoading = true)
             
             try {
-                val request = CreateArticleRequest(
-                    articleCode = currentArticle.articleCode,
-                    netWeight = currentArticle.netWeight,
-                    grossWeight = currentArticle.grossWeight,
-                    addOnCost = currentArticle.addOnCost,
-                    karat = currentArticle.karat,
-                    stoneWeight = 0.0,
-                    serialNumber = null,
-                    carigarNameCode = null
-                )
-                
-                when (val result = createArticleUseCase(request)) {
-                    is Result.Success -> {
-                        _uiState.value = currentState.copy(
-                            isLoading = false,
-                            successMessage = "Article created successfully",
-                            errorMessage = null
+                when (currentState.mode) {
+                    ArticleDetailMode.UPDATE_INDEPENDENT -> {
+                        // Update existing article
+                        val articleId = editingArticle?.id
+                        if (articleId == null) {
+                            _uiState.value = currentState.copy(
+                                isLoading = false,
+                                errorMessage = "Article ID not found for update"
+                            )
+                            return@launch
+                        }
+                        
+                        val updateRequest = UpdateArticleRequest(
+                            netWeight = currentArticle.netWeight,
+                            grossWeight = currentArticle.grossWeight,
+                            addOnCost = currentArticle.addOnCost
                         )
+                        
+                        when (val result = updateArticleUseCase(articleId, updateRequest)) {
+                            is Result.Success -> {
+                                _uiState.value = currentState.copy(
+                                    isLoading = false,
+                                    successMessage = "Article updated successfully",
+                                    errorMessage = null
+                                )
+                            }
+                            is Result.Error -> {
+                                _uiState.value = currentState.copy(
+                                    isLoading = false,
+                                    errorMessage = result.errorResponse.message ?: "Failed to update article"
+                                )
+                            }
+                            is Result.Loading -> {
+                                // Already handled by setting isLoading = true above
+                            }
+                        }
                     }
-                    is Result.Error -> {
-                        _uiState.value = currentState.copy(
-                            isLoading = false,
-                            errorMessage = result.errorResponse.message ?: "Failed to create article"
+                    else -> {
+                        // Create new article
+                        val createRequest = CreateArticleRequest(
+                            articleCode = currentArticle.articleCode,
+                            netWeight = currentArticle.netWeight,
+                            grossWeight = currentArticle.grossWeight,
+                            addOnCost = currentArticle.addOnCost,
+                            karat = currentArticle.karat,
+                            stoneWeight = 0.0,
+                            serialNumber = null,
+                            carigarNameCode = null
                         )
-                    }
-                    is Result.Loading -> {
-                        // Already handled by setting isLoading = true above
+                        
+                        when (val result = createArticleUseCase(createRequest)) {
+                            is Result.Success -> {
+                                _uiState.value = currentState.copy(
+                                    isLoading = false,
+                                    successMessage = "Article created successfully",
+                                    errorMessage = null
+                                )
+                            }
+                            is Result.Error -> {
+                                _uiState.value = currentState.copy(
+                                    isLoading = false,
+                                    errorMessage = result.errorResponse.message ?: "Failed to create article"
+                                )
+                            }
+                            is Result.Loading -> {
+                                // Already handled by setting isLoading = true above
+                            }
+                        }
                     }
                 }
                 
             } catch (e: Exception) {
+                val actionName = if (currentState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) "update" else "create"
                 _uiState.value = currentState.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Failed to create article"
+                    errorMessage = e.message ?: "Failed to $actionName article"
                 )
             }
         }

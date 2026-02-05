@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.presentation.viewmodel.ArticleDetailViewModel
+import com.kanishk.goldscanner.presentation.viewmodel.SharedEditArticleViewModel
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.runtime.remember
 import java.text.NumberFormat
 import java.util.*
 
@@ -30,13 +32,22 @@ fun ArticleDetailScreen(
     onNavigateBack: () -> Unit,
     articleDetailViewModel: ArticleDetailViewModel = koinViewModel()
 ) {
+    // Get shared instance - using static instance approach
+    val sharedEditViewModel: SharedEditArticleViewModel = remember { SharedEditArticleViewModel.getInstance() }
     val uiState by articleDetailViewModel.uiState.collectAsStateWithLifecycle()
+    val selectedArticle by sharedEditViewModel.selectedArticle.collectAsStateWithLifecycle()
     var showKaratDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
     
-    // Initialize mode for creating new article
-    LaunchedEffect(Unit) {
-        articleDetailViewModel.setMode(ArticleDetailMode.CREATE_NEW)
+    // Initialize mode and populate article if editing
+    LaunchedEffect(selectedArticle) {
+        if (selectedArticle != null) {
+            // Edit mode
+            articleDetailViewModel.populateArticleForEdit(selectedArticle!!.article)
+        } else {
+            // Create mode
+            articleDetailViewModel.setMode(ArticleDetailMode.CREATE_NEW)
+        }
     }
     
     // Handle success message with toast and navigation
@@ -47,6 +58,7 @@ fun ArticleDetailScreen(
             
             // Clear messages and navigate back immediately
             articleDetailViewModel.clearMessages()
+            sharedEditViewModel.clearSelectedArticle()
             onNavigateBack()
         }
     }
@@ -62,7 +74,10 @@ fun ArticleDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        sharedEditViewModel.clearSelectedArticle()
+                        onNavigateBack()
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -100,33 +115,48 @@ fun ArticleDetailScreen(
                     
                     // Karat Dropdown
                     ExposedDropdownMenuBox(
-                        expanded = showKaratDropdown,
-                        onExpandedChange = { showKaratDropdown = !showKaratDropdown }
+                        expanded = showKaratDropdown && uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT,
+                        onExpandedChange = { 
+                            if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                                showKaratDropdown = !showKaratDropdown 
+                            }
+                        }
                     ) {
                         OutlinedTextField(
                             value = "${uiState.karat}K",
                             onValueChange = { },
                             readOnly = true,
                             label = { Text("Karat") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showKaratDropdown) },
+                            trailingIcon = { 
+                                if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = showKaratDropdown) 
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) 
+                                    MaterialTheme.colorScheme.onSurface else 
+                                    MaterialTheme.colorScheme.onSurface
+                            ),
+                            enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT
                         )
                         
-                        ExposedDropdownMenu(
-                            expanded = showKaratDropdown,
-                            onDismissRequest = { showKaratDropdown = false }
-                        ) {
-                            uiState.karatOptions.forEach { karat ->
-                                DropdownMenuItem(
-                                    text = { Text("${karat}K") },
-                                    onClick = {
-                                        articleDetailViewModel.updateKarat(karat)
-                                        showKaratDropdown = false
-                                    }
-                                )
+                        if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                            ExposedDropdownMenu(
+                                expanded = showKaratDropdown,
+                                onDismissRequest = { showKaratDropdown = false }
+                            ) {
+                                uiState.karatOptions.forEach { karat ->
+                                    DropdownMenuItem(
+                                        text = { Text("${karat}K") },
+                                        onClick = {
+                                            articleDetailViewModel.updateKarat(karat)
+                                            showKaratDropdown = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -143,14 +173,25 @@ fun ArticleDetailScreen(
                     // Article Code
                     OutlinedTextField(
                         value = uiState.articleCode,
-                        onValueChange = articleDetailViewModel::updateArticleCode,
+                        onValueChange = { 
+                            if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                                articleDetailViewModel.updateArticleCode(it)
+                            }
+                        },
+                        readOnly = uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT,
                         label = { Text("Article Code") },
                         placeholder = { Text("e.g., RNC1234") },
-                        isError = !uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty(),
-                        supportingText = if (!uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty()) {
+                        isError = !uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT,
+                        supportingText = if (!uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
                             { Text("Format: ABC1234 (3 letters + 4 digits)") }
                         } else null,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) 
+                                MaterialTheme.colorScheme.onSurface else 
+                                MaterialTheme.colorScheme.onSurface
+                        ),
+                        enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT
                     )
                     
                     // Net Weight
@@ -288,7 +329,10 @@ fun ArticleDetailScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedButton(
-                            onClick = onNavigateBack,
+                            onClick = {
+                                sharedEditViewModel.clearSelectedArticle()
+                                onNavigateBack()
+                            },
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("Cancel")
@@ -306,6 +350,37 @@ fun ArticleDetailScreen(
                                 )
                             } else {
                                 Text("Save Article")
+                            }
+                        }
+                    }
+                }
+                ArticleDetailMode.UPDATE_INDEPENDENT -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                sharedEditViewModel.clearSelectedArticle()
+                                onNavigateBack()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancel")
+                        }
+                        
+                        Button(
+                            onClick = { articleDetailViewModel.saveArticle() },
+                            enabled = uiState.isFormValid && !uiState.isLoading,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Update Article")
                             }
                         }
                     }
