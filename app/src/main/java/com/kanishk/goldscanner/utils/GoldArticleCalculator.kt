@@ -2,7 +2,6 @@ package com.kanishk.goldscanner.utils
 
 import com.kanishk.goldscanner.data.model.GoldArticleCalculation
 import com.kanishk.goldscanner.data.model.LookupEntryForWastageAndMakingCharge
-import kotlin.math.round
 
 object GoldArticleCalculator {
     
@@ -74,17 +73,17 @@ object GoldArticleCalculator {
         val finalEstimatedCost = totalCostAfterTax + addOnCost
         
         return GoldArticleCalculation(
-            wastage = roundToTwoDecimalPlaces(wastage),
-            articleCostAsPerWeightRateAndKarat = roundToTwoDecimalPlaces(articleCostAsPerWeightRateAndKarat),
-            makingCharge = roundToTwoDecimalPlaces(makingCharge),
+            wastage = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(wastage, 2),
+            articleCostAsPerWeightRateAndKarat = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(articleCostAsPerWeightRateAndKarat, 2),
+            makingCharge = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(makingCharge, 2),
             totalCostBeforeTax = totalCostBeforeTax,
             luxuryTax = luxuryTax,
             totalCostAfterTax = totalCostAfterTax,
-            finalEstimatedCost = roundToTwoDecimalPlaces(finalEstimatedCost)
+            finalEstimatedCost = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(finalEstimatedCost, 2)
         )
     }
 
-    private fun calculateWastage(netWeight: Double, karat: Int): Double {
+    fun calculateWastage(netWeight: Double, karat: Int): Double {
         val matchedEntry = lookupTable.firstOrNull { entry ->
             netWeight >= entry.minNetWeight &&
                     netWeight < entry.maxNetWeight &&
@@ -93,7 +92,7 @@ object GoldArticleCalculator {
         return matchedEntry?.wastage?.invoke(netWeight) ?: 0.0
     }
 
-    private fun calculateArticleCostAsPerWeightRateAndKarat(
+    fun calculateArticleCostAsPerWeightRateAndKarat(
         totalWeight: Double,
         karat: Int,
         goldRatePerTola: Double
@@ -104,7 +103,7 @@ object GoldArticleCalculator {
         return cost
     }
 
-    private fun calculateMakingCharge(netWeight: Double, karat: Int, totalTaxableAmount: Double): Double {
+    fun calculateMakingCharge(netWeight: Double, karat: Int, totalTaxableAmount: Double): Double {
         val matchedEntry = lookupTable.firstOrNull { entry ->
             netWeight >= entry.minNetWeight &&
                     netWeight < entry.maxNetWeight &&
@@ -113,24 +112,35 @@ object GoldArticleCalculator {
         return matchedEntry?.makingCharge?.invoke(totalTaxableAmount) ?: 0.0
     }
 
-    private fun calculateTotalCostBeforeTax(
+    fun calculateTotalCostBeforeTax(
         costAsPerGoldRateAndKarat: Double,
         makingCharge: Double,
         discount: Double
     ): Double {
         val totalTaxableAmount = costAsPerGoldRateAndKarat + makingCharge - discount
-        return roundToTwoDecimalPlaces(totalTaxableAmount)
+        return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(totalTaxableAmount, 2)
     }
 
-    private fun calculateLuxuryTax(totalCostBeforeTax: Double): Double =
-        roundToTwoDecimalPlaces(LUXURY_TAX_PERCENT * totalCostBeforeTax)
+    fun calculateLuxuryTax(totalCostBeforeTax: Double): Double =
+        com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(LUXURY_TAX_PERCENT * totalCostBeforeTax, 2)
 
-    private fun calculateTotalCostAfterTax(
+    fun calculateTotalCostAfterTax(
         totalCostBeforeTax: Double,
         luxuryTaxAmount: Double
-    ): Double = roundToTwoDecimalPlaces(totalCostBeforeTax + luxuryTaxAmount)
+    ): Double = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(totalCostBeforeTax + luxuryTaxAmount, 2)
 
-    private fun roundToTwoDecimalPlaces(value: Double): Double {
-        return round(value * 100) / 100
+
+    /**
+     * Calculate total weight from net weight and wastage
+     */
+    fun calculateTotalWeight(netWeight: Double, wastage: Double): Double {
+        return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(netWeight + wastage, 2)
+    }
+
+    /**
+     * Calculate final estimated cost
+     */
+    fun calculateFinalEstimatedCost(articleCostAfterTax: Double, addOnCost: Double): Double {
+        return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(articleCostAfterTax + addOnCost, 2)
     }
 }
