@@ -11,4 +11,5 @@ val useCaseModule = module {
     factory { com.kanishk.goldscanner.domain.usecase.GetGoldArticlesUseCase(get()) }
     factory { com.kanishk.goldscanner.domain.usecase.CreateArticleUseCase(get()) }
     factory { com.kanishk.goldscanner.domain.usecase.UpdateArticleUseCase(get()) }
+    factory { com.kanishk.goldscanner.domain.usecase.GetCustomerListUseCase(get()) }
 }

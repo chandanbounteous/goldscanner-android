@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.kanishk.goldscanner.presentation.ui.screen.*
+import com.kanishk.goldscanner.presentation.screen.CustomerScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -51,6 +52,9 @@ fun AppNavigation(navController: NavHostController) {
                 initialSelectedTab = selectedTab,
                 onNavigateToArticleDetail = {
                     navController.navigate("article_detail")
+                },
+                onNavigateToCustomers = {
+                    navController.navigate("customers")
                 }
             )
         }
@@ -63,6 +67,10 @@ fun AppNavigation(navController: NavHostController) {
                     }
                 }
             )
+        }
+        
+        composable("customers") {
+            CustomerScreen()
         }
     }
 }

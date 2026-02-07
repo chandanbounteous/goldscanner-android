@@ -16,7 +16,8 @@ import com.kanishk.goldscanner.R
 @Composable
 fun MainScreen(
     initialSelectedTab: Int = 0,
-    onNavigateToArticleDetail: () -> Unit = {}
+    onNavigateToArticleDetail: () -> Unit = {},
+    onNavigateToCustomers: () -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(initialSelectedTab) }
     
@@ -57,7 +58,7 @@ fun MainScreen(
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen(onNavigateToArticleDetail)
                 2 -> BasketTabScreen()
-                3 -> MoreTabScreen()
+                3 -> MoreTabScreen(onNavigateToCustomers)
             }
         }
     }
@@ -87,7 +88,9 @@ fun BasketTabScreen() {
 }
 
 @Composable
-fun MoreTabScreen() {
+fun MoreTabScreen(
+    onNavigateToCustomers: () -> Unit = {}
+) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -96,10 +99,52 @@ fun MoreTabScreen() {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp)
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Customer management option
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            onClick = onNavigateToCustomers
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Customers",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Customers",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Manage customer information",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Navigate to customers",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Settings and more options",
-            modifier = Modifier.padding(horizontal = 16.dp)
+            text = "More options coming soon...",
+            modifier = Modifier.padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
