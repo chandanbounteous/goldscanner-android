@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.kanishk.goldscanner.presentation.ui.screen.*
-import com.kanishk.goldscanner.presentation.screen.CustomerScreen
+import com.kanishk.goldscanner.presentation.ui.screen.CustomerScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {

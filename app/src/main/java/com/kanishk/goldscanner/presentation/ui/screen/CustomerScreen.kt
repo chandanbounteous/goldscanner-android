@@ -1,4 +1,4 @@
-package com.kanishk.goldscanner.presentation.screen
+package com.kanishk.goldscanner.presentation.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.presentation.component.CustomerListItem
+import com.kanishk.goldscanner.presentation.component.AddCustomerModal
 import com.kanishk.goldscanner.presentation.viewmodel.CustomerListViewModel
 import com.kanishk.goldscanner.data.model.Customer
 import org.koin.androidx.compose.koinViewModel
@@ -183,6 +184,33 @@ fun CustomerScreen(
                 }
             }
         }
+    }
+    
+    // Show success message
+    customerUiState.showSuccessMessage?.let { message ->
+        LaunchedEffect(message) {
+            // Show success toast or snackbar
+            customerListViewModel.clearSuccessMessage()
+        }
+    }
+    
+    // Add Customer Modal
+    if (customerUiState.showAddCustomerModal) {
+        AddCustomerModal(
+            firstName = customerUiState.customerForm.firstName,
+            lastName = customerUiState.customerForm.lastName,
+            phone = customerUiState.customerForm.phone,
+            email = customerUiState.customerForm.email,
+            firstNameError = customerUiState.customerForm.firstNameError,
+            emailError = customerUiState.customerForm.emailError,
+            isSubmitting = customerUiState.customerForm.isSubmitting,
+            onFirstNameChanged = customerListViewModel::onFirstNameChanged,
+            onLastNameChanged = customerListViewModel::onLastNameChanged,
+            onPhoneChanged = customerListViewModel::onPhoneChanged,
+            onEmailChanged = customerListViewModel::onEmailChanged,
+            onSave = customerListViewModel::onCreateCustomer,
+            onCancel = customerListViewModel::onCloseAddCustomerModal
+        )
     }
 }
 
