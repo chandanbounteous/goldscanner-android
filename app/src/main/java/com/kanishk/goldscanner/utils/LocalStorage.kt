@@ -63,10 +63,25 @@ class LocalStorage(context: Context) {
         }
     }
     
-
+    
     
     fun remove(key: StorageKey) {
         preferences.edit().remove(key.name).apply()
+    }
+
+    // Public method to remove a key by string (for custom keys)
+    fun remove(key: String) {
+        preferences.edit().remove(key).apply()
+    }
+    
+    // Public method to get a string
+    fun getString(key: String): String? {
+        return preferences.getString(key, null)
+    }
+    
+    // Public method to put a string
+    fun putString(key: String, value: String) {
+        preferences.edit().putString(key, value).apply()
     }
     
     fun clear() {
@@ -86,6 +101,7 @@ class LocalStorage(context: Context) {
         CURRENT_GOLD_RATE_INFO,
         GOLD_RATE_UPDATE_HOUR,
         DEFAULT_ARTICLES_OFFSET,
-        DEFAULT_ARTICLES_LIMIT
+        DEFAULT_ARTICLES_LIMIT,
+        ACTIVE_BASKET
     }
 }

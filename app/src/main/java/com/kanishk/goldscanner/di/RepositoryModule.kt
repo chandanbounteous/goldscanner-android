@@ -5,10 +5,13 @@ import com.kanishk.goldscanner.data.repository.AuthRepositoryImpl
 import com.kanishk.goldscanner.domain.repository.AuthRepository
 import com.kanishk.goldscanner.data.repository.GoldArticleRepositoryImpl
 import com.kanishk.goldscanner.domain.repository.GoldArticleRepository
+import com.kanishk.goldscanner.data.repository.BasketRepositoryImpl
+import com.kanishk.goldscanner.domain.repository.BasketRepository
 
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<com.kanishk.goldscanner.domain.repository.GoldRateRepository> { com.kanishk.goldscanner.data.repository.GoldRateRepositoryImpl(get(), get()) }
     single<GoldArticleRepository> { GoldArticleRepositoryImpl(get(), get(), get(), get()) }
     single<com.kanishk.goldscanner.domain.repository.CustomerRepository> { com.kanishk.goldscanner.data.repository.CustomerRepositoryImpl(get()) }
+    single<BasketRepository> { BasketRepositoryImpl(get(), get()) }
 }

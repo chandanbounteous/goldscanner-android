@@ -57,7 +57,12 @@ fun MainScreen(
             when (selectedTab) {
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen(onNavigateToArticleDetail)
-                2 -> BasketTabScreen()
+                2 -> BasketListScreen(
+                    onBasketClick = { basket ->
+                        // TODO: Navigate to basket detail screen
+                        // For now, we'll just log the click
+                    }
+                )
                 3 -> MoreTabScreen(onNavigateToCustomers)
             }
         }
@@ -67,24 +72,6 @@ fun MainScreen(
 @Composable
 fun ArticlesTabScreen(onNavigateToArticleDetail: () -> Unit = {}) {
     ArticleListScreen(onNavigateToArticleDetail = onNavigateToArticleDetail)
-}
-
-@Composable
-fun BasketTabScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "Basket",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Your gold basket items will be displayed here",
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
 }
 
 @Composable
