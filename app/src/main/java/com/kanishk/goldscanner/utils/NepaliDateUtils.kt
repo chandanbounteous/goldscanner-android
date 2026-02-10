@@ -1,33 +1,37 @@
 package com.kanishk.goldscanner.utils
 
 import com.kanishk.goldscanner.data.model.response.NepaliDate
+import dev.shivathapaa.nepalidatepickerkmp.calendar_model.NepaliDateConverter
+import dev.shivathapaa.nepalidatepickerkmp.data.SimpleDate
 import java.time.LocalDate
 import java.time.ZoneId
+
 
 object NepaliDateUtils {
     
     /**
-     * Get current Nepali date
-     * This is a simplified conversion. For production use, you might want to use
-     * a proper Nepali calendar library for accurate conversion.
+     * Get current Nepali date using the official nepali-date-picker-android library
+     * Now using type alias, so NepaliDate is directly SimpleDate from the library.
      */
     fun getCurrentNepaliDate(): NepaliDate {
-        // Get current date in Nepal timezone
-        val nepaliZone = ZoneId.of("Asia/Kathmandu")
-        val currentDate = LocalDate.now(nepaliZone)
-        
-        // Simple approximation: Nepali year is approximately 56-57 years ahead
-        // This is a basic conversion and should be replaced with proper library
-        val nepaliYear = currentDate.year + 56
-        
-        // For simplicity, using similar month and day
-        // In reality, Nepali calendar has different month lengths and structure
-        return NepaliDate(
-            year = nepaliYear,
-            month = currentDate.monthValue,
-            dayOfMonth = currentDate.dayOfMonth
-        )
+//        // Get current date in Nepal timezone
+//        val nepaliZone = ZoneId.of("Asia/Kathmandu")
+//        val currentDate = LocalDate.now(nepaliZone)
+//
+//        // Since NepaliDate is now an alias of SimpleDate, we can return SimpleDate directly
+//        // TODO: Investigate the proper conversion methods in the library
+//        // The library likely has methods like DateConverter.englishToNepali() or similar
+//        return SimpleDate(
+//            year = currentDate.year + 56, // Approximate Nepali year conversion
+//            month = currentDate.monthValue,
+//            dayOfMonth = currentDate.dayOfMonth
+//        )
+        return NepaliDateConverter.todayNepaliSimpleDate
     }
+
+//    fun getTodayNepaliDate(): SimpleDate {
+//        return NepaliDateConverter.todayNepaliSimpleDate
+//    }
     
     /**
      * Compare two Nepali dates

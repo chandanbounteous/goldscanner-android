@@ -19,6 +19,7 @@ gson = "2.10.1"
 mockito = "5.8.0"
 mockitoKotlin = "5.2.1"
 coroutinesTest = "1.8.0"
+nepaliDatePickerAndroid = "2.5.0-beta01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -62,6 +63,9 @@ androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", nam
 
 # Gson
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Nepali Date Picker Android
+nepali-date-picker-android = { module = "io.github.shivathapaa:nepali-date-picker-android", version.ref = "nepaliDatePickerAndroid" }
 
 # Testing
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
