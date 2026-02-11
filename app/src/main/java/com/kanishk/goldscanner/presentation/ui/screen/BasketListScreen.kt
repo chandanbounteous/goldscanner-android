@@ -17,10 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +45,7 @@ fun BasketListScreen(
 
     // If there's an active basket, handle navigation to active basket screen
     LaunchedEffect(uiState.hasActiveBasket) {
-        if (uiState.hasActiveBasket && uiState.activeBasket != null) {
+        if (uiState.hasActiveBasket && uiState.activeBasketId != null) {
             // TODO: Navigate to active basket screen when implemented
             // For now, we'll just continue showing the basket list
         }
@@ -66,7 +64,7 @@ fun BasketListScreen(
                 actions = {
                     IconButton(onClick = { showSearchFilters = !showSearchFilters }) {
                         Icon(
-                            imageVector = if (showSearchFilters) ImageVector.vectorResource(R.drawable.expand_less) else Icons.Default.Search,
+                            imageVector = if (showSearchFilters) ImageVector.vectorResource(R.drawable.expand_more) else Icons.Default.Search,
                             contentDescription = if (showSearchFilters) "Hide filters" else "Show filters"
                         )
                     }

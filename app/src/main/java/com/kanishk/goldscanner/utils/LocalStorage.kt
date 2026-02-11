@@ -102,6 +102,6 @@ class LocalStorage(context: Context) {
         GOLD_RATE_UPDATE_HOUR,
         DEFAULT_ARTICLES_OFFSET,
         DEFAULT_ARTICLES_LIMIT,
-        ACTIVE_BASKET
+        ACTIVE_BASKET_ID
     }
 }

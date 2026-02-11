@@ -60,13 +60,8 @@ class BasketRepositoryImpl(
         }
     }
 
-    override suspend fun getActiveBasket(): ActiveBasket? {
-        return try {
-            val json = localStorage.getString(ACTIVE_BASKET_KEY) ?: return null
-            Json.decodeFromString<ActiveBasket>(json)
-        } catch (e: Exception) {
-            null
-        }
+    override suspend fun getActiveBasketId(): String? {
+        return localStorage.getValue<String>(LocalStorage.StorageKey.ACTIVE_BASKET_ID)
     }
 
     override suspend fun setActiveBasket(basket: ActiveBasket) {

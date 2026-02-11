@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.kanishk.goldscanner.domain.usecase.basket.SearchBasketsUseCase
-import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
 import com.kanishk.goldscanner.utils.Result
 
 class BasketListViewModel(
     private val searchBasketsUseCase: SearchBasketsUseCase,
-    private val getActiveBasketUseCase: GetActiveBasketUseCase
+    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BasketListUiState())
@@ -34,11 +34,11 @@ class BasketListViewModel(
         viewModelScope.launch {
             try {
                 @Suppress("RedundantSuspendModifier")
-                val activeBasket = getActiveBasketUseCase()
-                if (activeBasket != null) {
+                val activeBasketId = getActiveBasketIdUseCase()
+                if (activeBasketId != null) {
                     _uiState.value = _uiState.value.copy(
                         hasActiveBasket = true,
-                        activeBasket = activeBasket
+                        activeBasketId = activeBasketId
                     )
                 } else {
                     // No active basket, load initial basket list
@@ -163,5 +163,5 @@ data class BasketListUiState(
     val hasMore: Boolean = false,
     val errorMessage: String? = null,
     val hasActiveBasket: Boolean = false,
-    val activeBasket: com.kanishk.goldscanner.data.model.ActiveBasket? = null
+    val activeBasketId: String? = null
 )

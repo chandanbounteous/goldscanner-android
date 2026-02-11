@@ -4,7 +4,7 @@ import org.koin.dsl.module
 import com.kanishk.goldscanner.domain.usecase.auth.LoginUseCase
 import com.kanishk.goldscanner.domain.usecase.auth.CheckLoginStatusUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.SearchBasketsUseCase
-import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 
 val useCaseModule = module {
     factory { LoginUseCase(get()) }
@@ -16,5 +16,5 @@ val useCaseModule = module {
     factory { com.kanishk.goldscanner.domain.usecase.GetCustomerListUseCase(get()) }
     factory { com.kanishk.goldscanner.domain.usecase.CreateCustomerUseCase(get()) }
     factory { SearchBasketsUseCase(get()) }
-    factory { GetActiveBasketUseCase(get()) }
+    factory { GetActiveBasketIdUseCase(get()) }
 }

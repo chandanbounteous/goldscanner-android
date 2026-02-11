@@ -68,7 +68,7 @@ fun CustomerListItem(
                 // Lock Rate toggle
                 IconButton(
                     onClick = { onLockRateChanged(!isLockRateChecked) },
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(64.dp)
                 ) {
                     Icon(
                         painter = painterResource(
@@ -87,7 +87,7 @@ fun CustomerListItem(
                 Button(
                     onClick = onSelectClicked,
                     modifier = Modifier
-                        .height(32.dp)
+                        .height(40.dp)
                         .widthIn(min = 60.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -96,7 +96,7 @@ fun CustomerListItem(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text(
-                        text = "Select",
+                        text = "Create Basket",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Medium

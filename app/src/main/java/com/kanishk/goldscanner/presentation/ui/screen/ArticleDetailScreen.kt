@@ -13,11 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kanishk.goldscanner.R
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.presentation.viewmodel.ArticleDetailViewModel
 import com.kanishk.goldscanner.presentation.viewmodel.SharedEditArticleViewModel
@@ -355,24 +357,45 @@ fun ArticleDetailScreen(
                     }
                 }
                 ArticleDetailMode.UPDATE_INDEPENDENT -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                sharedEditViewModel.clearSelectedArticle()
-                                onNavigateBack()
-                            },
-                            modifier = Modifier.weight(1f)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("Cancel")
+                            OutlinedButton(
+                                onClick = {
+                                    sharedEditViewModel.clearSelectedArticle()
+                                    onNavigateBack()
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Cancel")
+                            }
+                            
+                            Button(
+                                onClick = { articleDetailViewModel.saveArticle() },
+                                enabled = uiState.isFormValid && !uiState.isLoading,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Update Article")
+                                }
+                            }
                         }
                         
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
                         Button(
-                            onClick = { articleDetailViewModel.saveArticle() },
+                            onClick = { 
+                                // TODO: Implement save to basket functionality
+                            },
                             enabled = uiState.isFormValid && !uiState.isLoading,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             if (uiState.isLoading) {
                                 CircularProgressIndicator(
@@ -380,14 +403,67 @@ fun ArticleDetailScreen(
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Text("Update Article")
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.gold_basket),
+                                        contentDescription = "Add to basket",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text("Save To Basket")
+                                }
                             }
                         }
                     }
                 }
-                else -> {
-                    // Placeholder for other modes
-                    Text("Other action buttons will be implemented for update modes")
+                ArticleDetailMode.UPDATE_BASKET_ITEM -> {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    sharedEditViewModel.clearSelectedArticle()
+                                    onNavigateBack()
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Button(
+                            onClick = { 
+                                // TODO: Implement save to basket functionality
+                            },
+                            enabled = uiState.isFormValid && !uiState.isLoading,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.gold_basket),
+                                        contentDescription = "Add to basket",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text("Save")
+                                }
+                            }
+                        }
+                    }
                 }
             }
             

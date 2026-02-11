@@ -12,7 +12,7 @@ interface BasketRepository {
         limit: Int
     ): Result<Pair<List<Basket>, Boolean>> // Returns (baskets, hasMore)
     
-    suspend fun getActiveBasket(): ActiveBasket?
+    suspend fun getActiveBasketId(): String?
     suspend fun setActiveBasket(basket: ActiveBasket)
     suspend fun clearActiveBasket()
 }
