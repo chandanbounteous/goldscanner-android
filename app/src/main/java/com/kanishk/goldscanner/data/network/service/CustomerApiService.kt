@@ -10,6 +10,8 @@ import com.kanishk.goldscanner.data.model.response.CreateCustomerResponse
 import com.kanishk.goldscanner.data.model.response.BasketSearchResponse
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
+import com.kanishk.goldscanner.data.model.CreateBasketRequest
+import com.kanishk.goldscanner.data.model.CreateBasketResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.NetworkConfig
 
@@ -195,6 +197,46 @@ class CustomerApiService(
                     body = errorMessage
                 )
                 else -> throw ApiException.NetworkError("Unexpected status code: ${response.status.value}")
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
+    
+    suspend fun createBasket(customerId: String, request: CreateBasketRequest): CreateBasketResponse {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.post("v1/customer/$customerId/basket") {
+                        contentType(ContentType.Application.Json)
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                        }
+                        setBody(request)
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                response.body<CreateBasketResponse>()
+            } else {
+                val errorBody = try {
+                    response.bodyAsText()
+                } catch (e: Exception) {
+                    null
+                }
+                throw ApiException.ClientError(response.status.value, response.status.description, errorBody!!)
             }
         } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
             throw e

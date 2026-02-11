@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.presentation.component.CustomerListItem
@@ -25,6 +26,7 @@ import com.kanishk.goldscanner.presentation.component.AddCustomerModal
 import com.kanishk.goldscanner.presentation.viewmodel.CustomerListViewModel
 import com.kanishk.goldscanner.data.model.Customer
 import org.koin.androidx.compose.koinViewModel
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,12 +35,21 @@ fun CustomerScreen(
     customerListViewModel: CustomerListViewModel = koinViewModel()
 ) {
     val customerUiState by customerListViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     
-    // Show error snackbar
+    // Show error toast
     customerUiState.error?.let { error ->
         LaunchedEffect(error) {
-            // Show error message
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
             customerListViewModel.clearError()
+        }
+    }
+    
+    // Show success toast
+    customerUiState.showSuccessMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            customerListViewModel.clearSuccessMessage()
         }
     }
 
@@ -178,8 +189,9 @@ fun CustomerScreen(
                         isLockRateChecked = isLocked,
                         onLockRateChanged = { isLocked = it },
                         onSelectClicked = { 
-                            customerListViewModel.onCustomerSelected(customer) 
-                        }
+                            customerListViewModel.onCustomerSelected(customer, isLocked) 
+                        },
+                        isCreatingBasket = customerUiState.creatingBasketForCustomerId == customer.id
                     )
                 }
             }

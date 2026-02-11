@@ -10,6 +10,8 @@ import com.goldscanner.data.common.ErrorResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import android.util.Log
+import com.kanishk.goldscanner.data.model.CreateBasketRequest
+import com.kanishk.goldscanner.data.model.CreatedBasket
 
 class CustomerRepositoryImpl(
     private val customerApiService: CustomerApiService
@@ -49,6 +51,26 @@ class CustomerRepositoryImpl(
             Result.Error(ErrorResponse.networkError(e.message))
         } catch (e: Exception) {
             Log.e("CustomerRepository", "Failed to create customer", e)
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
+    
+    override suspend fun createBasket(
+        customerId: String,
+        request: CreateBasketRequest
+    ): Result<CreatedBasket> {
+        return try {
+            val response = customerApiService.createBasket(customerId, request)
+            val basket = response.body.basket
+            Result.Success(basket)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
+        } catch (e: Exception) {
+            Log.e("CustomerRepository", "Failed to create basket", e)
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }
     }

@@ -20,6 +20,7 @@ fun CustomerListItem(
     isLockRateChecked: Boolean = false,
     onLockRateChanged: (Boolean) -> Unit = {},
     onSelectClicked: () -> Unit = {},
+    isCreatingBasket: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -86,21 +87,44 @@ fun CustomerListItem(
                 // Compact Select Button
                 Button(
                     onClick = onSelectClicked,
+                    enabled = !isCreatingBasket,
                     modifier = Modifier
                         .height(40.dp)
-                        .widthIn(min = 60.dp),
+                        .widthIn(min = 80.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = if (isCreatingBasket) 
+                            MaterialTheme.colorScheme.surfaceVariant 
+                        else 
+                            MaterialTheme.colorScheme.primary
                     ),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = "Create Basket",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (isCreatingBasket) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Creating...",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Create Basket",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }

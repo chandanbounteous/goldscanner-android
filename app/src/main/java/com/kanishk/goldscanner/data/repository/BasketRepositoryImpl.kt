@@ -3,7 +3,6 @@ package com.kanishk.goldscanner.data.repository
 import com.kanishk.goldscanner.domain.repository.BasketRepository
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
-import com.kanishk.goldscanner.data.model.ActiveBasket
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
 import com.kanishk.goldscanner.data.model.response.BasketItem
 import com.kanishk.goldscanner.data.model.response.NepaliDate
@@ -13,18 +12,11 @@ import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import com.kanishk.goldscanner.utils.LocalStorage
 import com.kanishk.goldscanner.utils.Result
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 class BasketRepositoryImpl(
     private val customerApiService: CustomerApiService,
     private val localStorage: LocalStorage
 ) : BasketRepository {
-
-    private companion object {
-        const val ACTIVE_BASKET_KEY = "active_basket"
-    }
 
     override suspend fun searchBaskets(
         filter: BasketSearchFilter,
@@ -64,17 +56,12 @@ class BasketRepositoryImpl(
         return localStorage.getValue<String>(LocalStorage.StorageKey.ACTIVE_BASKET_ID)
     }
 
-    override suspend fun setActiveBasket(basket: ActiveBasket) {
-        try {
-            val json = Json.encodeToString(basket)
-            localStorage.putString(ACTIVE_BASKET_KEY, json)
-        } catch (e: Exception) {
-            // Log error but don't throw to not break the flow
-        }
+    override suspend fun setActiveBasketId(basketId: String) {
+        localStorage.save(LocalStorage.StorageKey.ACTIVE_BASKET_ID, basketId)
     }
 
-    override suspend fun clearActiveBasket() {
-        localStorage.remove(ACTIVE_BASKET_KEY)
+    override suspend fun clearActiveBasketId() {
+        localStorage.remove(LocalStorage.StorageKey.ACTIVE_BASKET_ID)
     }
 
     private fun mapBasketItemToDomain(basketItem: BasketItem): Basket {

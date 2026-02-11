@@ -1,5 +1,8 @@
 package com.kanishk.goldscanner.data.model
 
+import kotlinx.serialization.Serializable
+import com.kanishk.goldscanner.data.model.response.NepaliDate
+
 data class Basket(
     val id: String,
     val basketNumber: Int,
@@ -26,4 +29,36 @@ data class ActiveBasket(
     val id: String,
     val basketNumber: Int,
     // Add other properties as needed for active basket
+)
+
+// Request model for basket creation
+@Serializable
+data class CreateBasketRequest(
+    val isGoldRateFixed: Boolean,
+    val fixedGoldRate24KPerTola: Double? = null,
+    val fixedGoldRateNepaliDate: NepaliDate? = null
+)
+
+// Response models for basket creation
+@Serializable
+data class CreatedBasket(
+    val id: String,
+    val basketNumber: Int,
+    val customerId: String,
+    val isGoldRateFixed: Boolean,
+    val fixedGoldRate24KPerTola: Double? = null,
+    val fixedGoldRateNepaliDate: NepaliDate? = null,
+    val createdAt: String
+)
+
+@Serializable
+data class CreateBasketResponse(
+    val responseCode: Int,
+    val responseMessage: String,
+    val body: CreateBasketResponseBody
+)
+
+@Serializable
+data class CreateBasketResponseBody(
+    val basket: CreatedBasket
 )

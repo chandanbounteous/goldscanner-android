@@ -2,6 +2,8 @@ package com.kanishk.goldscanner.domain.repository
 
 import com.kanishk.goldscanner.data.model.Customer
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
+import com.kanishk.goldscanner.data.model.CreateBasketRequest
+import com.kanishk.goldscanner.data.model.CreatedBasket
 import com.goldscanner.data.common.Result
 
 interface CustomerRepository {
@@ -12,4 +14,9 @@ interface CustomerRepository {
     suspend fun createCustomer(
         request: CreateCustomerRequest
     ): Result<Customer>
+    
+    suspend fun createBasket(
+        customerId: String, 
+        request: CreateBasketRequest
+    ): Result<CreatedBasket>
 }

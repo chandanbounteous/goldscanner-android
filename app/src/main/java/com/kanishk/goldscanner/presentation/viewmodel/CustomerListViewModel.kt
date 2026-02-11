@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kanishk.goldscanner.domain.usecase.GetCustomerListUseCase
 import com.kanishk.goldscanner.domain.usecase.CreateCustomerUseCase
+import com.kanishk.goldscanner.domain.usecase.CreateBasketUseCase
 import com.kanishk.goldscanner.data.model.Customer
+import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.goldscanner.data.common.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +34,14 @@ data class CustomerListUiState(
     val searchQuery: String = "",
     val showAddCustomerModal: Boolean = false,
     val customerForm: CustomerFormState = CustomerFormState(),
-    val showSuccessMessage: String? = null
+    val showSuccessMessage: String? = null,
+    val creatingBasketForCustomerId: String? = null
 )
 
 class CustomerListViewModel(
     private val getCustomerListUseCase: GetCustomerListUseCase,
-    private val createCustomerUseCase: CreateCustomerUseCase
+    private val createCustomerUseCase: CreateCustomerUseCase,
+    private val createBasketUseCase: CreateBasketUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CustomerListUiState())
@@ -93,9 +97,31 @@ class CustomerListViewModel(
         }
     }
 
-    fun onCustomerSelected(customer: Customer) {
-        // TODO: Handle customer selection for basket creation
-        // This will be implemented when basket functionality is added
+    fun onCustomerSelected(customer: Customer, isLockRateChecked: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                creatingBasketForCustomerId = customer.id,
+                error = null
+            )
+            
+            when (val result = createBasketUseCase(customer.id, isLockRateChecked)) {
+                is Result.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        creatingBasketForCustomerId = null,
+                        showSuccessMessage = "Basket created successfully for ${customer.fullName}"
+                    )
+                }
+                is Result.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        creatingBasketForCustomerId = null,
+                        error = result.errorResponse.message
+                    )
+                }
+                is Result.Loading -> {
+                    // Already handled above
+                }
+            }
+        }
     }
 
     fun onAddNewCustomer() {
