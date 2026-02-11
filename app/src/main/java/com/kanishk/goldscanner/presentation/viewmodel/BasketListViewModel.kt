@@ -10,7 +10,7 @@ import com.kanishk.goldscanner.domain.usecase.basket.SearchBasketsUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 class BasketListViewModel(
     private val searchBasketsUseCase: SearchBasketsUseCase,

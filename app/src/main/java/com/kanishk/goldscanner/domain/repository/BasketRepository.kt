@@ -2,7 +2,7 @@ package com.kanishk.goldscanner.domain.repository
 
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 interface BasketRepository {
     suspend fun searchBaskets(

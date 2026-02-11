@@ -32,9 +32,3 @@ data class ErrorBody(
     val message: String? = null,
     val details: String? = null
 )
-
-@Serializable
-data class ErrorDetail(
-    val field: String? = null,
-    val message: String
-)

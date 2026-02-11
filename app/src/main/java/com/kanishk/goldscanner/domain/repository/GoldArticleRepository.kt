@@ -5,7 +5,7 @@ import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
 import com.kanishk.goldscanner.data.model.request.UpdateArticleRequest
 import com.kanishk.goldscanner.data.model.response.GoldArticleResponse
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 import kotlinx.coroutines.flow.Flow
 
 interface GoldArticleRepository {

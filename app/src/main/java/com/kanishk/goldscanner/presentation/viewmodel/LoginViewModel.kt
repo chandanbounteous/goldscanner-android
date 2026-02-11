@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.kanishk.goldscanner.domain.usecase.auth.LoginUseCase
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 class LoginViewModel(
     private val loginUseCase: LoginUseCase

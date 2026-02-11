@@ -11,7 +11,7 @@ import com.kanishk.goldscanner.data.network.service.CustomerApiService
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import com.kanishk.goldscanner.utils.LocalStorage
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 class BasketRepositoryImpl(
     private val customerApiService: CustomerApiService,
@@ -42,13 +42,13 @@ class BasketRepositoryImpl(
 
             Result.Success(Pair(baskets, response.body.pagination.hasMore))
         } catch (e: AuthenticationException) {
-            Result.Error(ErrorResponse(e.message ?: "Authentication failed"))
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Authentication failed", message = e.message ?: "Authentication failed"))
         } catch (e: ApiException.ServerError) {
-            Result.Error(ErrorResponse(e.message ?: "Server error occurred"))
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Server error occurred", message = e.message ?: "Server error occurred"))
         } catch (e: ApiException.NetworkError) {
-            Result.Error(ErrorResponse(e.message ?: "Network error occurred"))
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Network error occurred", message = e.message ?: "Network error occurred"))
         } catch (e: Exception) {
-            Result.Error(ErrorResponse("Unexpected error: ${e.message}"))
+            Result.Error(ErrorResponse(responseMessage = "Unexpected error: ${e.message}", message = "Unexpected error: ${e.message}"))
         }
     }
 

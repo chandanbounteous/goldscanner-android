@@ -5,8 +5,8 @@ import com.kanishk.goldscanner.domain.repository.CustomerRepository
 import com.kanishk.goldscanner.data.model.Customer
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
-import com.goldscanner.data.common.Result
-import com.goldscanner.data.common.ErrorResponse
+import com.kanishk.goldscanner.data.model.response.Result
+import com.kanishk.goldscanner.data.model.response.ErrorResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import android.util.Log

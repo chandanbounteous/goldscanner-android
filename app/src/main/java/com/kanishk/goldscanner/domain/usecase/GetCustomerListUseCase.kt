@@ -2,7 +2,7 @@ package com.kanishk.goldscanner.domain.usecase
 
 import com.kanishk.goldscanner.domain.repository.CustomerRepository
 import com.kanishk.goldscanner.data.model.Customer
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 class GetCustomerListUseCase(
     private val customerRepository: CustomerRepository

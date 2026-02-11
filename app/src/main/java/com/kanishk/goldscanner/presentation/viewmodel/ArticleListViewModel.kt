@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kanishk.goldscanner.domain.usecase.GetGoldArticlesUseCase
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

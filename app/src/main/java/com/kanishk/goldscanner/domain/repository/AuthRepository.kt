@@ -2,7 +2,7 @@ package com.kanishk.goldscanner.domain.repository
 
 import com.kanishk.goldscanner.data.model.response.LoginResponse
 import com.kanishk.goldscanner.data.model.response.UserInfo
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 interface AuthRepository {
     suspend fun login(username: String, password: String): Result<LoginResponse>

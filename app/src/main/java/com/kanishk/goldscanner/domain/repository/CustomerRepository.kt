@@ -4,7 +4,7 @@ import com.kanishk.goldscanner.data.model.Customer
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.CreateBasketRequest
 import com.kanishk.goldscanner.data.model.CreatedBasket
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 interface CustomerRepository {
     suspend fun getCustomerList(

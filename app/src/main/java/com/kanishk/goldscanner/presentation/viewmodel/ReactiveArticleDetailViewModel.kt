@@ -2,7 +2,7 @@ package com.kanishk.goldscanner.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 import com.kanishk.goldscanner.data.model.request.CreateArticleRequest
 import com.kanishk.goldscanner.data.model.request.UpdateArticleRequest
 import com.kanishk.goldscanner.data.model.response.GoldRateResponse

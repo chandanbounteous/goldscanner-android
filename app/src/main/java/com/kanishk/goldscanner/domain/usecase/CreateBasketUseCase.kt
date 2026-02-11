@@ -5,7 +5,8 @@ import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.domain.repository.BasketRepository
 import com.kanishk.goldscanner.data.model.CreateBasketRequest
 import com.kanishk.goldscanner.data.model.CreatedBasket
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
+import com.kanishk.goldscanner.data.model.response.ErrorResponse
 import android.util.Log
 
 class CreateBasketUseCase(
@@ -36,7 +37,7 @@ class CreateBasketUseCase(
                     }
                     is Result.Loading -> {
                         return Result.Error(
-                            com.goldscanner.data.common.ErrorResponse(
+                            ErrorResponse(
                                 400, 
                                 "Unable to fetch current gold rate", 
                                 null
@@ -63,7 +64,7 @@ class CreateBasketUseCase(
         } catch (e: Exception) {
             Log.e("CreateBasketUseCase", "Error creating basket", e)
             return Result.Error(
-                com.goldscanner.data.common.ErrorResponse(
+                ErrorResponse(
                     500, 
                     "Failed to create basket: ${e.message}", 
                     null

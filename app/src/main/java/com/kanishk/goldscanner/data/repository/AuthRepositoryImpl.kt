@@ -10,7 +10,7 @@ import com.kanishk.goldscanner.data.model.response.UserInfo
 import com.kanishk.goldscanner.data.model.response.ErrorResponse
 import com.kanishk.goldscanner.utils.LocalStorage
 import com.kanishk.goldscanner.utils.JWTTokenUtils
-import com.kanishk.goldscanner.utils.Result
+import com.kanishk.goldscanner.data.model.response.Result
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
@@ -31,25 +31,25 @@ class AuthRepositoryImpl(
             Result.Success(response)
         } catch (e: ApiException.ClientError) {
             Result.Error(ErrorResponse(
-                message = "Invalid credentials",
-                code = e.code,
-                details = e.body
+                responseMessage = "Invalid credentials",
+                responseCode = e.code,
+                message = e.body ?: "Invalid credentials"
             ))
         } catch (e: ApiException.ServerError) {
             Result.Error(ErrorResponse(
-                message = "Server error. Please try again later.",
-                code = e.code,
-                details = e.body
+                responseMessage = "Server error. Please try again later.",
+                responseCode = e.code,
+                message = e.body ?: "Server error"
             ))
         } catch (e: ApiException.NetworkError) {
             Result.Error(ErrorResponse(
-                message = "Network error. Please check your connection.",
-                details = e.message
+                responseMessage = "Network error. Please check your connection.",
+                message = e.message ?: "Network error"
             ))
         } catch (e: Exception) {
             Result.Error(ErrorResponse(
-                message = "An unexpected error occurred",
-                details = e.message
+                responseMessage = "An unexpected error occurred",
+                message = e.message ?: "Unexpected error"
             ))
         }
     }
@@ -79,16 +79,16 @@ class AuthRepositoryImpl(
                     // Token refresh failed
                     clearUserSession()
                     Result.Error(ErrorResponse(
-                        message = "Token refresh failed",
-                        details = tokenResult.message
+                        responseMessage = "Token refresh failed",
+                        message = tokenResult.message ?: "Token refresh failed"
                     ))
                 }
             }
         } catch (e: Exception) {
             clearUserSession()
             Result.Error(ErrorResponse(
-                message = "Token refresh failed",
-                details = e.message
+                responseMessage = "Token refresh failed",
+                message = e.message ?: "Token refresh failed"
             ))
         }
     }

@@ -3,7 +3,7 @@ package com.kanishk.goldscanner.domain.usecase
 import com.kanishk.goldscanner.domain.repository.GoldArticleRepository
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
-import com.goldscanner.data.common.Result
+import com.kanishk.goldscanner.data.model.response.Result
 
 class GetGoldArticlesUseCase(
     private val goldArticleRepository: GoldArticleRepository

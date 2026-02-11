@@ -12,8 +12,8 @@ import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.GoldArticlesResponse
 import com.kanishk.goldscanner.utils.LocalStorage
 import com.kanishk.goldscanner.utils.GoldArticleCalculator
-import com.goldscanner.data.common.Result
-import com.goldscanner.data.common.ErrorResponse
+import com.kanishk.goldscanner.data.model.response.Result
+import com.kanishk.goldscanner.data.model.response.ErrorResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 

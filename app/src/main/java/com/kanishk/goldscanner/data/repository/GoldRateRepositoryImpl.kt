@@ -3,8 +3,8 @@ package com.kanishk.goldscanner.data.repository
 import com.kanishk.goldscanner.data.network.service.GoldRateApiService
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.data.model.response.GoldRateResponse
-import com.goldscanner.data.common.Result
-import com.goldscanner.data.common.ErrorResponse
+import com.kanishk.goldscanner.data.model.response.Result
+import com.kanishk.goldscanner.data.model.response.ErrorResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import com.kanishk.goldscanner.utils.LocalStorage
