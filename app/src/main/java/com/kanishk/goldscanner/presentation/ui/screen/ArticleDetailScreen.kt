@@ -388,31 +388,34 @@ fun ArticleDetailScreen(
                             }
                         }
                         
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        Button(
-                            onClick = { 
-                                // TODO: Implement save to basket functionality
-                            },
-                            enabled = uiState.isFormValid && !uiState.isLoading,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.gold_basket),
-                                        contentDescription = "Add to basket",
-                                        modifier = Modifier.size(16.dp)
+                        // Only show "Save to basket" button when there's an active basket
+                        if (uiState.hasActiveBasket) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            Button(
+                                onClick = { 
+                                    // TODO: Implement save to basket functionality
+                                },
+                                enabled = uiState.isFormValid && !uiState.isLoading,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
                                     )
-                                    Text("Save To Basket")
+                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.gold_basket),
+                                            contentDescription = "Add to basket",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text("Save To Basket")
+                                    }
                                 }
                             }
                         }

@@ -9,6 +9,7 @@ import com.kanishk.goldscanner.data.model.response.GoldRateResponse
 import com.kanishk.goldscanner.data.model.response.GoldArticle
 import com.kanishk.goldscanner.domain.usecase.CreateArticleUseCase
 import com.kanishk.goldscanner.domain.usecase.UpdateArticleUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailMode
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailState
@@ -25,7 +26,8 @@ import kotlinx.coroutines.launch
 class ReactiveArticleDetailViewModel(
     private val goldRateRepository: GoldRateRepository,
     private val createArticleUseCase: CreateArticleUseCase,
-    private val updateArticleUseCase: UpdateArticleUseCase
+    private val updateArticleUseCase: UpdateArticleUseCase,
+    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase
 ) : ViewModel() {
     
     // Reactive calculation engine
@@ -48,6 +50,7 @@ class ReactiveArticleDetailViewModel(
     init {
         loadGoldRates()
         setupReactiveCalculations()
+        checkActiveBasket()
     }
     
     /**
@@ -58,6 +61,18 @@ class ReactiveArticleDetailViewModel(
             reactiveArticle.collect { article ->
                 syncToUiState(article)
             }
+        }
+    }
+    
+    /**
+     * Check if there's an active basket to show/hide the "Save to basket" button
+     */
+    private fun checkActiveBasket() {
+        viewModelScope.launch {
+            val activeBasketId = getActiveBasketIdUseCase()
+            _uiState.value = _uiState.value.copy(
+                hasActiveBasket = activeBasketId != null
+            )
         }
     }
     

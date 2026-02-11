@@ -48,6 +48,9 @@ data class ArticleDetailState(
     val errorMessage: String? = null,
     val successMessage: String? = null,
     
+    // Basket availability
+    val hasActiveBasket: Boolean = false,
+    
     // Available karat options
     val karatOptions: List<Int> = listOf(24, 22, 18, 14)
 ) {
