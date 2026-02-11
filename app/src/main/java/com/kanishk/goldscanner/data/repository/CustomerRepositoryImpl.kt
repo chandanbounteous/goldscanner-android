@@ -4,9 +4,11 @@ import com.kanishk.goldscanner.data.network.service.CustomerApiService
 import com.kanishk.goldscanner.domain.repository.CustomerRepository
 import com.kanishk.goldscanner.data.model.Customer
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
+import com.kanishk.goldscanner.data.model.request.AddArticleToBasketRequest
 import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.Result
 import com.kanishk.goldscanner.data.model.response.ErrorResponse
+import com.kanishk.goldscanner.data.model.response.AddArticleToBasketResponse
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
 import android.util.Log
@@ -71,6 +73,25 @@ class CustomerRepositoryImpl(
             Result.Error(ErrorResponse.networkError(e.message))
         } catch (e: Exception) {
             Log.e("CustomerRepository", "Failed to create basket", e)
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
+    
+    override suspend fun addArticleToBasket(
+        basketId: String,
+        request: AddArticleToBasketRequest
+    ): Result<AddArticleToBasketResponse> {
+        return try {
+            val response = customerApiService.addArticleToBasket(basketId, request)
+            Result.Success(response)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
+        } catch (e: Exception) {
+            Log.e("CustomerRepository", "Failed to add article to basket", e)
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }
     }

@@ -8,8 +8,10 @@ import io.ktor.http.*
 import com.kanishk.goldscanner.data.model.response.CustomerListResponse
 import com.kanishk.goldscanner.data.model.response.CreateCustomerResponse
 import com.kanishk.goldscanner.data.model.response.BasketSearchResponse
+import com.kanishk.goldscanner.data.model.response.AddArticleToBasketResponse
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
+import com.kanishk.goldscanner.data.model.request.AddArticleToBasketRequest
 import com.kanishk.goldscanner.data.model.CreateBasketRequest
 import com.kanishk.goldscanner.data.model.CreateBasketResponse
 import com.kanishk.goldscanner.data.network.ApiException
@@ -237,6 +239,76 @@ class CustomerApiService(
                     null
                 }
                 throw ApiException.ClientError(response.status.value, response.status.description, errorBody!!)
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
+    
+    suspend fun addArticleToBasket(
+        basketId: String,
+        request: AddArticleToBasketRequest
+    ): AddArticleToBasketResponse {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.post("v1/customer/basket/$basketId/article") {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                            append(HttpHeaders.ContentType, "application/json")
+                        }
+                        setBody(request)
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                val addArticleResponse: AddArticleToBasketResponse = response.body()
+                
+                if (addArticleResponse.responseCode in 200..299) {
+                    addArticleResponse
+                } else {
+                    throw ApiException.ClientError(
+                        code = addArticleResponse.responseCode,
+                        message = addArticleResponse.responseMessage,
+                        body = addArticleResponse.responseMessage
+                    )
+                }
+            } else {
+                when (response.status.value) {
+                    401 -> {
+                        throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    in 400..499 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = response.status.value,
+                            message = "Client error: ${response.status.description}",
+                            body = errorBody
+                        )
+                    }
+                    in 500..599 -> {
+                        throw ApiException.ServerError(
+                            code = response.status.value,
+                            message = "Server error: ${response.status.description}",
+                            body = response.bodyAsText()
+                        )
+                    }
+                    else -> {
+                        throw ApiException.NetworkError("HTTP error: ${response.status}")
+                    }
+                }
             }
         } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
             throw e

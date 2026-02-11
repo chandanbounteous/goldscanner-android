@@ -32,6 +32,7 @@ import java.util.*
 @Composable
 fun ArticleDetailScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToBasket: () -> Unit = {},
     articleDetailViewModel: ArticleDetailViewModel = koinViewModel()
 ) {
     // Get shared instance - using static instance approach
@@ -393,8 +394,24 @@ fun ArticleDetailScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             Button(
-                                onClick = { 
-                                    // TODO: Implement save to basket functionality
+                                onClick = {
+                                    articleDetailViewModel.addToBasket(
+                                        onSuccess = {
+                                            Toast.makeText(
+                                                context,
+                                                "Article added to basket successfully!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            onNavigateToBasket()
+                                        },
+                                        onError = { message ->
+                                            Toast.makeText(
+                                                context,
+                                                message,
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    )
                                 },
                                 enabled = uiState.isFormValid && !uiState.isLoading,
                                 modifier = Modifier.fillMaxWidth()
@@ -441,8 +458,24 @@ fun ArticleDetailScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         Button(
-                            onClick = { 
-                                // TODO: Implement save to basket functionality
+                            onClick = {
+                                articleDetailViewModel.addToBasket(
+                                    onSuccess = {
+                                        Toast.makeText(
+                                            context,
+                                            "Article added to basket successfully!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        onNavigateToBasket()
+                                    },
+                                    onError = { message ->
+                                        Toast.makeText(
+                                            context,
+                                            message,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                )
                             },
                             enabled = uiState.isFormValid && !uiState.isLoading,
                             modifier = Modifier.fillMaxWidth()

@@ -65,6 +65,11 @@ fun AppNavigation(navController: NavHostController) {
                     navController.navigate("main/1") {
                         popUpTo("main") { inclusive = true }
                     }
+                },
+                onNavigateToBasket = {
+                    navController.navigate("main/3") {
+                        popUpTo("main") { inclusive = true }
+                    }
                 }
             )
         }

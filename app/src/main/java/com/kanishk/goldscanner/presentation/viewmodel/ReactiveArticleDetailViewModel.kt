@@ -10,6 +10,7 @@ import com.kanishk.goldscanner.data.model.response.GoldArticle
 import com.kanishk.goldscanner.domain.usecase.CreateArticleUseCase
 import com.kanishk.goldscanner.domain.usecase.UpdateArticleUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.AddArticleToBasketUseCase
 import com.kanishk.goldscanner.domain.repository.GoldRateRepository
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailMode
 import com.kanishk.goldscanner.presentation.ui.screen.ArticleDetailState
@@ -27,7 +28,8 @@ class ReactiveArticleDetailViewModel(
     private val goldRateRepository: GoldRateRepository,
     private val createArticleUseCase: CreateArticleUseCase,
     private val updateArticleUseCase: UpdateArticleUseCase,
-    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase
+    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
+    private val addArticleToBasketUseCase: AddArticleToBasketUseCase
 ) : ViewModel() {
     
     // Reactive calculation engine
@@ -472,6 +474,107 @@ class ReactiveArticleDetailViewModel(
                     isLoading = false,
                     errorMessage = e.message ?: "Failed to $actionName article"
                 )
+            }
+        }
+    }
+    
+    /**
+     * Add current article to active basket
+     */
+    fun addToBasket(onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        val currentState = _uiState.value
+        val currentArticle = _reactiveArticle.value
+        
+        if (!currentState.isFormValid) {
+            val errorMessage = "Please fill all required fields correctly"
+            _uiState.value = currentState.copy(
+                errorMessage = errorMessage
+            )
+            onError(errorMessage)
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.value = currentState.copy(isLoading = true)
+            
+            try {
+                // Get active basket ID
+                val basketId = getActiveBasketIdUseCase()
+                if (basketId == null) {
+                    val errorMessage = "No active basket found. Please create a basket first."
+                    _uiState.value = currentState.copy(
+                        isLoading = false,
+                        errorMessage = errorMessage
+                    )
+                    onError(errorMessage)
+                    return@launch
+                }
+                
+                // Get article ID - for existing articles use editingArticle.id, for new ones we need to create first
+                val articleId = if (currentState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) {
+                    editingArticle?.id
+                } else {
+                    // For CREATE_NEW mode, we need to save the article first to get an ID
+                    // However, the current API design expects an existing article ID
+                    // This might need adjustment based on your API design
+                    editingArticle?.id ?: currentArticle.articleCode.takeIf { it.isNotBlank() }
+                }
+                
+                if (articleId == null || articleId.isBlank()) {
+                    val errorMessage = "Unable to identify article for adding to basket"
+                    _uiState.value = currentState.copy(
+                        isLoading = false,
+                        errorMessage = errorMessage
+                    )
+                    onError(errorMessage)
+                    return@launch
+                }
+                
+                // Call use case to add article to basket
+                when (val result = addArticleToBasketUseCase(
+                    basketId = basketId,
+                    articleId = articleId,
+                    netWeight = currentArticle.netWeight,
+                    grossWeight = currentArticle.grossWeight,
+                    addOnCost = currentArticle.addOnCost,
+                    wastage = currentArticle.wastage,
+                    makingCharge = currentArticle.makingCharge,
+                    discount = currentArticle.discount
+                )) {
+                    is Result.Success -> {
+                        val successMessage = "Article added to basket successfully"
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            successMessage = successMessage,
+                            errorMessage = null
+                        )
+                        onSuccess()
+                    }
+                    is Result.Error -> {
+                        val errorMessage = result.errorResponse.message ?: "Failed to add article to basket"
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            errorMessage = errorMessage
+                        )
+                        onError(errorMessage)
+                    }
+                    is Result.Loading -> {
+                        // Should not happen with our implementation, but handle gracefully
+                        val errorMessage = "Request is still loading..."
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            errorMessage = errorMessage
+                        )
+                        onError(errorMessage)
+                    }
+                }
+            } catch (e: Exception) {
+                val errorMessage = "An unexpected error occurred: ${e.message}"
+                _uiState.value = currentState.copy(
+                    isLoading = false,
+                    errorMessage = errorMessage
+                )
+                onError(errorMessage)
             }
         }
     }
