@@ -10,6 +10,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
+//import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import com.kanishk.goldscanner.presentation.viewmodel.BasketDetailViewModel
 import com.kanishk.goldscanner.data.model.response.BasketArticle
+import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.utils.Utils
 import java.text.DecimalFormat
 
@@ -37,18 +44,36 @@ fun BasketDetailScreen(
         viewModel.loadBasketDetails()
     }
     
+    var isBilled by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Basket Details") },
+                title = { 
+                    Text(
+                        "Basket Details",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
+                    // Show Basket Listing Button - moved from FAB
+                    IconButton(
+                        onClick = { 
+                            // TODO: Navigate to basket listing screen
+                        }
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Show Basket List"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         }
     ) { paddingValues ->
@@ -92,9 +117,21 @@ fun BasketDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(
+                        start = 16.dp, 
+                        end = 16.dp, 
+                        top = 16.dp, 
+                        bottom = 120.dp // Space for bottom buttons
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // CompactGoldRateCard at the top
+                    item {
+                        CompactGoldRateCard(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
                     // Customer Information
                     uiState.customer?.let { customer ->
                         item {
@@ -108,11 +145,39 @@ fun BasketDetailScreen(
                     // Basket Articles
                     if (uiState.articles.isNotEmpty()) {
                         item {
-                            Text(
-                                text = "Articles in Basket",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Articles in Basket",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    IconButton(
+                                        onClick = { 
+                                            // TODO: Navigate to article selection screen
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddCircle,
+                                            contentDescription = "Add Article",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
                         }
                         
                         items(uiState.articles) { article ->
@@ -120,32 +185,15 @@ fun BasketDetailScreen(
                                 article = article,
                                 onEditClick = { editArticle ->
                                     // TODO: Navigate to article edit screen
-                                    // For now, we can log or show a toast
                                 },
                                 onDeleteClick = { deleteArticle ->
                                     // TODO: Implement article deletion from basket
-                                    // For now, we can log or show a toast
                                 }
                             )
                         }
                     } else {
                         item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No articles in basket",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                            EmptyBasketCard()
                         }
                     }
                     
@@ -171,6 +219,72 @@ fun BasketDetailScreen(
                             totalBasketAmount = uiState.totalBasketAmount
                         )
                     }
+                    
+                    // Basket Status Card - moved below totals
+                    item {
+                        BasketStatusCard(
+                            isBilled = isBilled,
+                            onBilledChanged = { isBilled = it },
+                            basketStatus = uiState.basketDetail?.isBilled?.let { if (it) "Billed" else "Not Billed" }
+                        )
+                    }
+                    
+                    // Bottom Action Buttons - Prominent buttons at the bottom
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Save Basket Button - Most prominent
+                            Button(
+                                onClick = {
+                                    // TODO: Implement save basket functionality
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Save Basket",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
+                            
+                            // Discard Basket Button
+                            OutlinedButton(
+                                onClick = {
+                                    // TODO: Implement discard basket functionality
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                ),
+                                border = ButtonDefaults.outlinedButtonBorder.copy(
+                                    brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Discard Basket",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -195,17 +309,34 @@ fun CustomerInfoCard(
     customerPhone: String
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Customer Information",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit, // Using Edit as person icon not available
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Customer Information",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             
             Text(
                 text = "Name: $customerName",
@@ -322,17 +453,34 @@ fun CalculationInputsCard(
     onExtraDiscountChanged: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Basket Adjustments",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Basket Adjustments",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             
             OutlinedTextField(
                 value = oldGoldItemCost,
@@ -381,17 +529,31 @@ fun BasketTotalsCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Basket Totals",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Basket Totals",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -471,6 +633,120 @@ fun BasketTotalsCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    }
+}
+
+/**
+ * Basket status card with billing option
+ */
+@Composable
+fun BasketStatusCard(
+    isBilled: Boolean,
+    onBilledChanged: (Boolean) -> Unit,
+    basketStatus: String?,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isBilled) MaterialTheme.colorScheme.primaryContainer 
+                           else MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = if (isBilled) MaterialTheme.colorScheme.onPrimaryContainer 
+                          else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Basket Status",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isBilled) MaterialTheme.colorScheme.onPrimaryContainer 
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = isBilled,
+                    onCheckedChange = onBilledChanged
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Mark as Billed",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (isBilled) MaterialTheme.colorScheme.onPrimaryContainer 
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+//            basketStatus?.let { status ->
+//                Text(
+//                    text = "Current Status: $status",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = if (isBilled) MaterialTheme.colorScheme.onPrimaryContainer
+//                           else MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+        }
+    }
+}
+
+/**
+ * Empty basket card with helpful message
+ */
+@Composable
+fun EmptyBasketCard(
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "No articles in basket",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "Tap the + button to add articles",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
