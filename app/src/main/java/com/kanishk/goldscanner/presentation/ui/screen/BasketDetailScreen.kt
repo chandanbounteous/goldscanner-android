@@ -20,9 +20,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import org.koin.androidx.compose.koinViewModel
 import com.kanishk.goldscanner.presentation.viewmodel.BasketDetailViewModel
 import com.kanishk.goldscanner.data.model.response.BasketArticle
@@ -39,12 +41,28 @@ fun BasketDetailScreen(
     viewModel: BasketDetailViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     LaunchedEffect(Unit) {
         viewModel.loadBasketDetails()
     }
     
     var isBilled by remember { mutableStateOf(false) }
+    
+    // Show success messages with toast
+    uiState.successMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
+    
+    // Show error messages with toast
+    uiState.errorMessage?.let { error ->
+        LaunchedEffect(error) {
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -220,6 +238,7 @@ fun BasketDetailScreen(
                         )
                     }
                     
+
                     // Basket Status Card - moved below totals
                     item {
                         BasketStatusCard(
@@ -240,21 +259,33 @@ fun BasketDetailScreen(
                             // Save Basket Button - Most prominent
                             Button(
                                 onClick = {
-                                    // TODO: Implement save basket functionality
+                                    viewModel.saveBasket(isBilled)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
+                                enabled = !uiState.isLoading && uiState.isFormValid,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Save Basket",
+                                    text = if (uiState.isLoading) {
+                                        if (isBilled) "Billing..." else "Saving..."
+                                    } else {
+                                        if (isBilled) "Bill Basket" else "Save Basket"
+                                    },
                                     style = MaterialTheme.typography.labelLarge
                                 )
                             }
@@ -287,14 +318,6 @@ fun BasketDetailScreen(
                     }
                 }
             }
-        }
-    }
-    
-    // Show success messages with snackbar
-    uiState.successMessage?.let { message ->
-        LaunchedEffect(message) {
-            // Handle success message display if needed
-            viewModel.clearMessages()
         }
     }
 }

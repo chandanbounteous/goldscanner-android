@@ -3,8 +3,12 @@ package com.kanishk.goldscanner.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kanishk.goldscanner.data.model.response.Result
+import com.kanishk.goldscanner.data.model.request.UpdateBasketRequest
+import com.kanishk.goldscanner.data.model.request.NepaliDateRequest
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetBasketDetailsUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.UpdateBasketUseCase
+import com.kanishk.goldscanner.domain.usecase.GetCurrentGoldRateUseCase
 import com.kanishk.goldscanner.presentation.ui.screen.BasketDetailState
 import com.kanishk.goldscanner.utils.GoldArticleCalculator
 import com.kanishk.goldscanner.utils.Utils
@@ -13,10 +17,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class BasketDetailViewModel(
     private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
-    private val getBasketDetailsUseCase: GetBasketDetailsUseCase
+    private val getBasketDetailsUseCase: GetBasketDetailsUseCase,
+    private val updateBasketUseCase: UpdateBasketUseCase,
+    private val getCurrentGoldRateUseCase: GetCurrentGoldRateUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(BasketDetailState())
@@ -61,6 +69,8 @@ class BasketDetailViewModel(
                             extraDiscount = basket.extraDiscount,
                             oldGoldItemCostText = Utils.formatDoubleToString(basket.oldGoldItemCost),
                             extraDiscountText = Utils.formatDoubleToString(basket.extraDiscount),
+                            updatedOldGoldItemCost = basket.oldGoldItemCost,
+                            updatedExtraDiscount = basket.extraDiscount,
                             originalPreTaxAmount = totals.preTaxBasketAmount,
                             preTaxBasketAmount = calculatePreTaxBasketAmount(
                                 totals.preTaxBasketAmount,
@@ -109,6 +119,7 @@ class BasketDetailViewModel(
         _uiState.value = currentState.copy(
             oldGoldItemCostText = value,
             oldGoldItemCost = if (isValid) parsedValue else currentState.oldGoldItemCost,
+            updatedOldGoldItemCost = if (isValid) parsedValue else currentState.updatedOldGoldItemCost,
             isOldGoldItemCostValid = isValid,
             errorMessage = null
         )
@@ -129,6 +140,7 @@ class BasketDetailViewModel(
         _uiState.value = currentState.copy(
             extraDiscountText = value,
             extraDiscount = if (isValid) parsedValue else currentState.extraDiscount,
+            updatedExtraDiscount = if (isValid) parsedValue else currentState.updatedExtraDiscount,
             isExtraDiscountValid = isValid,
             errorMessage = null
         )
@@ -187,6 +199,115 @@ class BasketDetailViewModel(
             oldGoldCost,
             extraDiscount
         )
+    }
+    
+    /**
+     * Save basket with updated values
+     */
+    fun saveBasket(isBilled: Boolean) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                
+                // Get active basket ID
+                val basketId = getActiveBasketIdUseCase()
+                if (basketId == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No active basket found"
+                    )
+                    return@launch
+                }
+                
+                val currentState = _uiState.value
+                
+                // Prepare the request
+                val request = if (isBilled) {
+                    // Get current date and gold rate for billing
+                    val currentDateTime = LocalDateTime.now()
+                    val isoDateTime = currentDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z"
+                    
+                    // Get current gold rate
+                    val goldRateResult = getCurrentGoldRateUseCase()
+                    val currentGoldRate = when (goldRateResult) {
+                        is Result.Success -> goldRateResult.data.rates["24"] ?: 0.0
+                        is Result.Error -> 0.0
+                        is Result.Loading -> 0.0
+                    }
+                    
+                    val nepaliDate = when (goldRateResult) {
+                        is Result.Success -> NepaliDateRequest(
+                            year = goldRateResult.data.date.year,
+                            month = goldRateResult.data.date.month,
+                            dayOfMonth = goldRateResult.data.date.dayOfMonth
+                        )
+                        is Result.Error -> NepaliDateRequest(
+                            year = 2081,
+                            month = 1,
+                            dayOfMonth = 1
+                        )
+                        is Result.Loading -> NepaliDateRequest(
+                            year = 2081,
+                            month = 1,
+                            dayOfMonth = 1
+                        )
+                    }
+                    
+                    UpdateBasketRequest(
+                        oldGoldItemCost = currentState.updatedOldGoldItemCost,
+                        extraDiscount = currentState.updatedExtraDiscount,
+                        isBilled = true,
+                        billingDate = isoDateTime,
+                        billingDateNepali = nepaliDate,
+                        billedGoldRate24KPerTola = currentGoldRate
+                    )
+                } else {
+                    UpdateBasketRequest(
+                        oldGoldItemCost = currentState.updatedOldGoldItemCost,
+                        extraDiscount = currentState.updatedExtraDiscount,
+                        isBilled = false
+                    )
+                }
+                
+                // Make the API call
+                when (val result = updateBasketUseCase(basketId, request)) {
+                    is Result.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            successMessage = if (isBilled) "Basket billed successfully!" else "Basket saved successfully!",
+                            errorMessage = null
+                        )
+                        
+                        // If billed, clear active basket
+                        if (isBilled) {
+                            // Clear active basket from local storage
+                            // This will be handled by the repository
+                            loadBasketDetails() // Refresh to show updated status
+                        } else {
+                            // Refresh basket details to show updated values
+                            loadBasketDetails()
+                        }
+                    }
+                    is Result.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.errorResponse.message,
+                            successMessage = null
+                        )
+                    }
+                    is Result.Loading -> {
+                        // Already in loading state
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error saving basket", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "An unexpected error occurred while saving the basket",
+                    successMessage = null
+                )
+            }
+        }
     }
     
     /**

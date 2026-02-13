@@ -10,9 +10,11 @@ import com.kanishk.goldscanner.data.model.response.CreateCustomerResponse
 import com.kanishk.goldscanner.data.model.response.BasketSearchResponse
 import com.kanishk.goldscanner.data.model.response.AddArticleToBasketResponse
 import com.kanishk.goldscanner.data.model.response.BasketDetailResponse
+import com.kanishk.goldscanner.data.model.response.UpdateBasketResponse
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
 import com.kanishk.goldscanner.data.model.request.AddArticleToBasketRequest
+import com.kanishk.goldscanner.data.model.request.UpdateBasketRequest
 import com.kanishk.goldscanner.data.model.CreateBasketRequest
 import com.kanishk.goldscanner.data.model.CreateBasketResponse
 import com.kanishk.goldscanner.data.network.ApiException
@@ -361,6 +363,88 @@ class CustomerApiService(
                             code = 404,
                             message = "Basket not found",
                             body = "Basket with ID $basketId not found"
+                        )
+                    }
+                    in 400..499 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = response.status.value,
+                            message = "Client error: ${response.status.description}",
+                            body = errorBody
+                        )
+                    }
+                    in 500..599 -> {
+                        throw ApiException.ServerError(
+                            code = response.status.value,
+                            message = "Server error: ${response.status.description}",
+                            body = response.bodyAsText()
+                        )
+                    }
+                    else -> {
+                        throw ApiException.NetworkError("HTTP error: ${response.status}")
+                    }
+                }
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
+    
+    suspend fun updateBasket(basketId: String, request: UpdateBasketRequest): UpdateBasketResponse {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.patch("v1/customer/basket/$basketId") {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                            append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        }
+                        setBody(request)
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                val updateBasketResponse: UpdateBasketResponse = response.body()
+                
+                if (updateBasketResponse.responseCode in 200..299) {
+                    updateBasketResponse
+                } else {
+                    throw ApiException.ClientError(
+                        code = updateBasketResponse.responseCode,
+                        message = updateBasketResponse.responseMessage,
+                        body = updateBasketResponse.responseMessage
+                    )
+                }
+            } else {
+                when (response.status.value) {
+                    401 -> {
+                        throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    404 -> {
+                        throw ApiException.ClientError(
+                            code = 404,
+                            message = "Basket not found",
+                            body = "Basket with ID $basketId not found"
+                        )
+                    }
+                    400 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = 400,
+                            message = "Cannot update basket - basket is already billed or discarded",
+                            body = errorBody
                         )
                     }
                     in 400..499 -> {

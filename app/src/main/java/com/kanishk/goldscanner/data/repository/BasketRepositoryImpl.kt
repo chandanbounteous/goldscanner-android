@@ -4,9 +4,11 @@ import com.kanishk.goldscanner.domain.repository.BasketRepository
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
+import com.kanishk.goldscanner.data.model.request.UpdateBasketRequest
 import com.kanishk.goldscanner.data.model.response.BasketItem
 import com.kanishk.goldscanner.data.model.response.NepaliDate
 import com.kanishk.goldscanner.data.model.response.ErrorResponse
+import com.kanishk.goldscanner.data.model.response.UpdateBasketResponse
 import com.kanishk.goldscanner.data.network.service.CustomerApiService
 import com.kanishk.goldscanner.data.network.ApiException
 import com.kanishk.goldscanner.data.network.AuthenticationException
@@ -45,6 +47,23 @@ class BasketRepositoryImpl(
             Result.Error(ErrorResponse(responseMessage = e.message ?: "Authentication failed", message = e.message ?: "Authentication failed"))
         } catch (e: ApiException.ServerError) {
             Result.Error(ErrorResponse(responseMessage = e.message ?: "Server error occurred", message = e.message ?: "Server error occurred"))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Network error occurred", message = e.message ?: "Network error occurred"))
+        } catch (e: Exception) {
+            Result.Error(ErrorResponse(responseMessage = "Unexpected error: ${e.message}", message = "Unexpected error: ${e.message}"))
+        }
+    }
+    
+    override suspend fun updateBasket(basketId: String, request: UpdateBasketRequest): Result<UpdateBasketResponse> {
+        return try {
+            val response = customerApiService.updateBasket(basketId, request)
+            Result.Success(response)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Authentication failed", message = e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ServerError) {
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Server error occurred", message = e.message ?: "Server error occurred"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse(responseMessage = e.message ?: "Client error occurred", message = e.message ?: "Client error occurred"))
         } catch (e: ApiException.NetworkError) {
             Result.Error(ErrorResponse(responseMessage = e.message ?: "Network error occurred", message = e.message ?: "Network error occurred"))
         } catch (e: Exception) {

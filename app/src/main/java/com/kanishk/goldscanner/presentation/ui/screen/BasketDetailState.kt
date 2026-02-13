@@ -20,6 +20,8 @@ data class BasketDetailState(
     val extraDiscount: Double = 0.0,
     val oldGoldItemCostText: String = "0.00",
     val extraDiscountText: String = "0.00",
+    val updatedOldGoldItemCost: Double = 0.0,
+    val updatedExtraDiscount: Double = 0.0,
     
     // Calculated fields
     val originalPreTaxAmount: Double = 0.0, // Original from API
