@@ -7,6 +7,7 @@ import com.kanishk.goldscanner.data.model.CreateBasketRequest
 import com.kanishk.goldscanner.data.model.CreatedBasket
 import com.kanishk.goldscanner.data.model.response.Result
 import com.kanishk.goldscanner.data.model.response.AddArticleToBasketResponse
+import com.kanishk.goldscanner.data.model.response.BasketDetailResponse
 
 interface CustomerRepository {
     suspend fun getCustomerList(
@@ -26,4 +27,8 @@ interface CustomerRepository {
         basketId: String,
         request: AddArticleToBasketRequest
     ): Result<AddArticleToBasketResponse>
+    
+    suspend fun getBasketDetails(
+        basketId: String
+    ): Result<BasketDetailResponse>
 }

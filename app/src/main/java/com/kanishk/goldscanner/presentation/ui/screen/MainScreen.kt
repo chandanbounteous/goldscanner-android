@@ -59,12 +59,7 @@ fun MainScreen(
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen(onNavigateToArticleDetail)
                 2 -> CustomerTabScreen(onNavigateToCustomers)
-                3 -> BasketListScreen(
-                    onBasketClick = { basket ->
-                        // TODO: Navigate to basket detail screen
-                        // For now, we'll just log the click
-                    }
-                )
+                3 -> BasketScreen()
                 4 -> MoreTabScreen()
             }
         }

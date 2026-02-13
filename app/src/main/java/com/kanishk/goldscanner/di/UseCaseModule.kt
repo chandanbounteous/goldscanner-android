@@ -6,6 +6,7 @@ import com.kanishk.goldscanner.domain.usecase.auth.CheckLoginStatusUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.SearchBasketsUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.AddArticleToBasketUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.GetBasketDetailsUseCase
 
 val useCaseModule = module {
     factory { LoginUseCase(get()) }
@@ -20,4 +21,5 @@ val useCaseModule = module {
     factory { SearchBasketsUseCase(get()) }
     factory { GetActiveBasketIdUseCase(get()) }
     factory { AddArticleToBasketUseCase(get()) }
+    factory { GetBasketDetailsUseCase(get()) }
 }

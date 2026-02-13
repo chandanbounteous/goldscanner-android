@@ -143,4 +143,48 @@ object GoldArticleCalculator {
     fun calculateFinalEstimatedCost(articleCostAfterTax: Double, addOnCost: Double): Double {
         return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(articleCostAfterTax + addOnCost, 2)
     }
+    
+    /**
+     * Calculate updated pre-tax basket amount
+     * Formula: original pre-tax amount + old gold item cost - extra discount
+     */
+    fun calculatePreTaxBasketAmount(
+        originalPreTaxAmount: Double,
+        oldGoldItemCost: Double,
+        extraDiscount: Double
+    ): Double {
+        return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(
+            originalPreTaxAmount + oldGoldItemCost - extraDiscount, 2
+        )
+    }
+    
+    /**
+     * Calculate basket luxury tax
+     */
+    fun calculateBasketLuxuryTax(preTaxBasketAmount: Double): Double {
+        return calculateLuxuryTax(preTaxBasketAmount)
+    }
+    
+    /**
+     * Calculate post-tax basket amount
+     */
+    fun calculatePostTaxBasketAmount(
+        preTaxBasketAmount: Double,
+        luxuryTax: Double
+    ): Double {
+        return calculateTotalCostAfterTax(preTaxBasketAmount, luxuryTax)
+    }
+    
+    /**
+     * Calculate total basket amount
+     * Formula: totalBasketAmount = postTaxBasketAmount + totalAddOnCost
+     */
+    fun calculateTotalBasketAmount(
+        postTaxBasketAmount: Double,
+        totalAddOnCost: Double
+    ): Double {
+        return com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(
+            postTaxBasketAmount + totalAddOnCost, 2
+        )
+    }
 }

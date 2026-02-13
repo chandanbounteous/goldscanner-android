@@ -9,6 +9,7 @@ import com.kanishk.goldscanner.data.model.response.CustomerListResponse
 import com.kanishk.goldscanner.data.model.response.CreateCustomerResponse
 import com.kanishk.goldscanner.data.model.response.BasketSearchResponse
 import com.kanishk.goldscanner.data.model.response.AddArticleToBasketResponse
+import com.kanishk.goldscanner.data.model.response.BasketDetailResponse
 import com.kanishk.goldscanner.data.model.request.CreateCustomerRequest
 import com.kanishk.goldscanner.data.model.request.BasketSearchRequest
 import com.kanishk.goldscanner.data.model.request.AddArticleToBasketRequest
@@ -289,6 +290,78 @@ class CustomerApiService(
                 when (response.status.value) {
                     401 -> {
                         throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    in 400..499 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = response.status.value,
+                            message = "Client error: ${response.status.description}",
+                            body = errorBody
+                        )
+                    }
+                    in 500..599 -> {
+                        throw ApiException.ServerError(
+                            code = response.status.value,
+                            message = "Server error: ${response.status.description}",
+                            body = response.bodyAsText()
+                        )
+                    }
+                    else -> {
+                        throw ApiException.NetworkError("HTTP error: ${response.status}")
+                    }
+                }
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
+    
+    suspend fun getBasketDetails(basketId: String): BasketDetailResponse {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.get("v1/customer/basket/$basketId") {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                        }
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                val basketDetailResponse: BasketDetailResponse = response.body()
+                
+                if (basketDetailResponse.responseCode in 200..299) {
+                    basketDetailResponse
+                } else {
+                    throw ApiException.ClientError(
+                        code = basketDetailResponse.responseCode,
+                        message = basketDetailResponse.responseMessage,
+                        body = basketDetailResponse.responseMessage
+                    )
+                }
+            } else {
+                when (response.status.value) {
+                    401 -> {
+                        throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    404 -> {
+                        throw ApiException.ClientError(
+                            code = 404,
+                            message = "Basket not found",
+                            body = "Basket with ID $basketId not found"
+                        )
                     }
                     in 400..499 -> {
                         val errorBody = response.bodyAsText()
