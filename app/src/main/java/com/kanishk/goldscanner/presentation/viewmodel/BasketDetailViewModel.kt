@@ -9,6 +9,7 @@ import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetBasketDetailsUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.UpdateBasketUseCase
 import com.kanishk.goldscanner.domain.usecase.GetCurrentGoldRateUseCase
+import com.kanishk.goldscanner.domain.usecase.ClearActiveBasketIdUseCase
 import com.kanishk.goldscanner.presentation.ui.screen.BasketDetailState
 import com.kanishk.goldscanner.utils.GoldArticleCalculator
 import com.kanishk.goldscanner.utils.Utils
@@ -24,7 +25,8 @@ class BasketDetailViewModel(
     private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
     private val getBasketDetailsUseCase: GetBasketDetailsUseCase,
     private val updateBasketUseCase: UpdateBasketUseCase,
-    private val getCurrentGoldRateUseCase: GetCurrentGoldRateUseCase
+    private val getCurrentGoldRateUseCase: GetCurrentGoldRateUseCase,
+    private val clearActiveBasketIdUseCase: ClearActiveBasketIdUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(BasketDetailState())
@@ -278,10 +280,8 @@ class BasketDetailViewModel(
                             errorMessage = null
                         )
                         
-                        // If billed, clear active basket
+                        // If billed, refresh to show updated status with new UI
                         if (isBilled) {
-                            // Clear active basket from local storage
-                            // This will be handled by the repository
                             loadBasketDetails() // Refresh to show updated status
                         } else {
                             // Refresh basket details to show updated values
@@ -325,5 +325,19 @@ class BasketDetailViewModel(
             errorMessage = null,
             successMessage = null
         )
+    }
+    
+    /**
+     * Clear active basket ID from local storage
+     * Used when navigating away from basket detail to other screens
+     */
+    fun clearActiveBasket() {
+        viewModelScope.launch {
+            try {
+                clearActiveBasketIdUseCase()
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error clearing active basket", e)
+            }
+        }
     }
 }

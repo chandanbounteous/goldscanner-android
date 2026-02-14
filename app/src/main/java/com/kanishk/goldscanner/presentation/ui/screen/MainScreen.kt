@@ -59,7 +59,15 @@ fun MainScreen(
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen(onNavigateToArticleDetail)
                 2 -> CustomerTabScreen(onNavigateToCustomers)
-                3 -> BasketScreen()
+                3 -> BasketScreen(
+                    onNavigateToArticleListing = {
+                        selectedTab = 1 // Navigate to Articles tab
+                    },
+                    onNavigateAway = {
+                        // This will be called when navigating away from billed basket
+                        // The actual clearing is handled in the DisposableEffect
+                    }
+                )
                 4 -> MoreTabScreen()
             }
         }

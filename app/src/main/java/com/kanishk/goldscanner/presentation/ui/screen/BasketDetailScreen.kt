@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import androidx.compose.runtime.DisposableEffect
 import org.koin.androidx.compose.koinViewModel
 import com.kanishk.goldscanner.presentation.viewmodel.BasketDetailViewModel
 import com.kanishk.goldscanner.data.model.response.BasketArticle
@@ -38,13 +39,25 @@ import java.text.DecimalFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BasketDetailScreen(
-    viewModel: BasketDetailViewModel = koinViewModel()
+    viewModel: BasketDetailViewModel = koinViewModel(),
+    onNavigateToArticleListing: () -> Unit = {},
+    onNavigateAway: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     
     LaunchedEffect(Unit) {
         viewModel.loadBasketDetails()
+    }
+    
+    // Clear active basket when navigating away from billed baskets
+    DisposableEffect(Unit) {
+        onDispose {
+            if (uiState.basketDetail?.isBilled == true) {
+                viewModel.clearActiveBasket()
+                onNavigateAway()
+            }
+        }
     }
     
     var isBilled by remember { mutableStateOf(false) }
@@ -183,16 +196,19 @@ fun BasketDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    IconButton(
-                                        onClick = { 
-                                            // TODO: Navigate to article selection screen
+                                    // Add Article Button - Only shown for non-billed baskets
+                                    if (uiState.basketDetail?.isBilled != true) {
+                                        IconButton(
+                                            onClick = { 
+                                                onNavigateToArticleListing()
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.AddCircle,
+                                                contentDescription = "Add Article",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AddCircle,
-                                            contentDescription = "Add Article",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
                                     }
                                 }
                             }
@@ -256,63 +272,91 @@ fun BasketDetailScreen(
                                 .padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Save Basket Button - Most prominent
-                            Button(
-                                onClick = {
-                                    viewModel.saveBasket(isBilled)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = !uiState.isLoading && uiState.isFormValid,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                if (uiState.isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary
+                            // Conditional button based on basket's billed status
+                            if (uiState.basketDetail?.isBilled == true) {
+                                // Print Bill Button - Only shown for billed baskets
+                                Button(
+                                    onClick = {
+                                        // TODO: Implement print bill functionality
+                                        Toast.makeText(context, "Print Bill functionality coming soon", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiary
                                     )
-                                } else {
+                                ) {
                                     Icon(
-                                        imageVector = Icons.Default.CheckCircle,
+                                        imageVector = Icons.Default.List,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp)
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Print Bill",
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (uiState.isLoading) {
-                                        if (isBilled) "Billing..." else "Saving..."
-                                    } else {
-                                        if (isBilled) "Bill Basket" else "Save Basket"
+                            } else {
+                                // Save/Bill Basket Button - Only shown for non-billed baskets
+                                Button(
+                                    onClick = {
+                                        viewModel.saveBasket(isBilled)
                                     },
-                                    style = MaterialTheme.typography.labelLarge
-                                )
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = !uiState.isLoading && uiState.isFormValid,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    if (uiState.isLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (uiState.isLoading) {
+                                            if (isBilled) "Billing..." else "Saving..."
+                                        } else {
+                                            if (isBilled) "Bill Basket" else "Save Basket"
+                                        },
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
                             }
                             
-                            // Discard Basket Button
-                            OutlinedButton(
-                                onClick = {
-                                    // TODO: Implement discard basket functionality
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                ),
-                                border = ButtonDefaults.outlinedButtonBorder.copy(
-                                    brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Discard Basket",
-                                    style = MaterialTheme.typography.labelLarge
-                                )
+                            // Discard Basket Button - Only shown for non-billed baskets
+                            if (uiState.basketDetail?.isBilled != true) {
+                                OutlinedButton(
+                                    onClick = {
+                                        // TODO: Implement discard basket functionality
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                                        brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Discard Basket",
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
                             }
                         }
                     }

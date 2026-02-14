@@ -42,10 +42,18 @@ class BasketListViewModel(
                     )
                 } else {
                     // No active basket, load initial basket list
+                    _uiState.value = _uiState.value.copy(
+                        hasActiveBasket = false,
+                        activeBasketId = null
+                    )
                     loadInitialBaskets()
                 }
             } catch (e: Exception) {
                 // If error checking active basket, proceed with loading list
+                _uiState.value = _uiState.value.copy(
+                    hasActiveBasket = false,
+                    activeBasketId = null
+                )
                 loadInitialBaskets()
             }
         }
@@ -153,6 +161,14 @@ class BasketListViewModel(
 
     fun refreshBaskets() {
         loadInitialBaskets()
+    }
+    
+    /**
+     * Refresh the active basket check - useful when returning to basket tab
+     * after the active basket may have been cleared
+     */
+    fun refreshActiveBasketCheck() {
+        checkActiveBasket()
     }
 }
 
