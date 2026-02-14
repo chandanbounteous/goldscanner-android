@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class BasketDetailViewModel(
@@ -225,9 +227,9 @@ class BasketDetailViewModel(
                 
                 // Prepare the request
                 val request = if (isBilled) {
-                    // Get current date and gold rate for billing
-                    val currentDateTime = LocalDateTime.now()
-                    val isoDateTime = currentDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z"
+                    // Get current date and gold rate for billing (using GMT/UTC time)
+                    val currentDateTime = ZonedDateTime.now(ZoneOffset.UTC)
+                    val isoDateTime = currentDateTime.format(DateTimeFormatter.ISO_INSTANT)
                     
                     // Get current gold rate
                     val goldRateResult = getCurrentGoldRateUseCase()
