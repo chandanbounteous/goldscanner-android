@@ -228,7 +228,11 @@ fun BasketDetailScreen(
                         }
                     } else {
                         item {
-                            EmptyBasketCard()
+                            EmptyBasketCard(
+                                onAddClick = {
+                                    onNavigateToArticleListing()
+                                }
+                            )
                         }
                     }
                     
@@ -822,7 +826,8 @@ fun BasketStatusCard(
  */
 @Composable
 fun EmptyBasketCard(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -838,12 +843,17 @@ fun EmptyBasketCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            IconButton(
+                onClick = onAddClick,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Article",
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
                 text = "No articles in basket",
                 style = MaterialTheme.typography.headlineMedium,
@@ -853,7 +863,7 @@ fun EmptyBasketCard(
             Text(
                 text = "Tap the + button to add articles",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
