@@ -8,6 +8,7 @@ import com.kanishk.goldscanner.data.model.request.NepaliDateRequest
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetBasketDetailsUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.UpdateBasketUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.DeleteBasketArticleUseCase
 import com.kanishk.goldscanner.domain.usecase.GetCurrentGoldRateUseCase
 import com.kanishk.goldscanner.domain.usecase.ClearActiveBasketIdUseCase
 import com.kanishk.goldscanner.presentation.ui.screen.BasketDetailState
@@ -27,6 +28,7 @@ class BasketDetailViewModel(
     private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
     private val getBasketDetailsUseCase: GetBasketDetailsUseCase,
     private val updateBasketUseCase: UpdateBasketUseCase,
+    private val deleteBasketArticleUseCase: DeleteBasketArticleUseCase,
     private val getCurrentGoldRateUseCase: GetCurrentGoldRateUseCase,
     private val clearActiveBasketIdUseCase: ClearActiveBasketIdUseCase
 ) : ViewModel() {
@@ -340,6 +342,81 @@ class BasketDetailViewModel(
             } catch (e: Exception) {
                 Log.e("BasketDetailViewModel", "Error clearing active basket", e)
             }
+        }
+    }
+    
+    /**
+     * Delete an article from the basket
+     */
+    fun deleteArticle(articleId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                errorMessage = null, 
+                successMessage = null
+            )
+            
+            try {
+                when (val result = deleteBasketArticleUseCase(articleId)) {
+                    is Result.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            successMessage = "Article removed from basket successfully",
+                            errorMessage = null
+                        )
+                        // Refresh basket details to update the UI
+                        loadBasketDetails()
+                    }
+                    is Result.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.errorResponse.message ?: "Failed to delete article from basket",
+                            successMessage = null
+                        )
+                    }
+                    is Result.Loading -> {
+                        // Already in loading state
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error deleting article", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "An unexpected error occurred while deleting the article",
+                    successMessage = null
+                )
+            }
+        }
+    }
+    
+    /**
+     * Show delete confirmation dialog for an article
+     */
+    fun showDeleteConfirmationDialog(article: com.kanishk.goldscanner.data.model.response.BasketArticle) {
+        _uiState.value = _uiState.value.copy(
+            showDeleteConfirmationDialog = true,
+            articleToDelete = article
+        )
+    }
+    
+    /**
+     * Dismiss delete confirmation dialog
+     */
+    fun dismissDeleteConfirmationDialog() {
+        _uiState.value = _uiState.value.copy(
+            showDeleteConfirmationDialog = false,
+            articleToDelete = null
+        )
+    }
+    
+    /**
+     * Confirm and execute article deletion
+     */
+    fun confirmDeleteArticle() {
+        val articleToDelete = _uiState.value.articleToDelete
+        if (articleToDelete != null) {
+            dismissDeleteConfirmationDialog()
+            deleteArticle(articleToDelete.id)
         }
     }
 }

@@ -221,7 +221,8 @@ fun BasketDetailScreen(
                                     // TODO: Navigate to article edit screen
                                 },
                                 onDeleteClick = { deleteArticle ->
-                                    // TODO: Implement article deletion from basket
+                                    // Show confirmation dialog before deleting
+                                    viewModel.showDeleteConfirmationDialog(deleteArticle)
                                 }
                             )
                         }
@@ -363,6 +364,46 @@ fun BasketDetailScreen(
                 }
             }
         }
+    }
+    
+    // Delete confirmation dialog
+    if (uiState.showDeleteConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDeleteConfirmationDialog() },
+            title = {
+                Text(
+                    text = "Delete Article",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to remove '${uiState.articleToDelete?.articleCode}' from this basket? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.confirmDeleteArticle() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.dismissDeleteConfirmationDialog() }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

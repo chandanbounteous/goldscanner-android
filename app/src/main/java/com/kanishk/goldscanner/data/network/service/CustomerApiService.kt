@@ -475,4 +475,75 @@ class CustomerApiService(
             throw ApiException.NetworkError(e.message ?: "Network error occurred")
         }
     }
+
+    suspend fun deleteBasketArticle(articleId: String): Unit {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.delete("v1/customer/basket/article/$articleId") {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                        }
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                // Return success - no response body needed for delete
+                return
+            } else {
+                when (response.status.value) {
+                    401 -> {
+                        throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    404 -> {
+                        throw ApiException.ClientError(
+                            code = 404,
+                            message = "Article not found in basket",
+                            body = "Basket article with ID $articleId not found"
+                        )
+                    }
+                    400 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = 400,
+                            message = "Cannot delete article - basket may be billed or discarded",
+                            body = errorBody
+                        )
+                    }
+                    in 400..499 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = response.status.value,
+                            message = "Client error: ${response.status.description}",
+                            body = errorBody
+                        )
+                    }
+                    in 500..599 -> {
+                        throw ApiException.ServerError(
+                            code = response.status.value,
+                            message = "Server error: ${response.status.description}",
+                            body = response.bodyAsText()
+                        )
+                    }
+                    else -> {
+                        throw ApiException.NetworkError("HTTP error: ${response.status}")
+                    }
+                }
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
 }

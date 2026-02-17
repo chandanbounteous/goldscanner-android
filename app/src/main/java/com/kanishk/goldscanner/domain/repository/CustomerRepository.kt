@@ -31,4 +31,8 @@ interface CustomerRepository {
     suspend fun getBasketDetails(
         basketId: String
     ): Result<BasketDetailResponse>
+
+    suspend fun deleteBasketArticle(
+        articleId: String
+    ): Result<Unit>
 }

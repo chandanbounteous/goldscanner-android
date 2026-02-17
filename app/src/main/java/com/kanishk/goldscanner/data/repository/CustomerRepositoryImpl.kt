@@ -112,4 +112,20 @@ class CustomerRepositoryImpl(
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }
     }
+
+    override suspend fun deleteBasketArticle(articleId: String): Result<Unit> {
+        return try {
+            customerApiService.deleteBasketArticle(articleId)
+            Result.Success(Unit)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
+        } catch (e: Exception) {
+            Log.e("CustomerRepository", "Failed to delete basket article", e)
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
 }

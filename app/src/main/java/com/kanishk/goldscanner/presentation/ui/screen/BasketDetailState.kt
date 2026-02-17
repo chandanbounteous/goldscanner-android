@@ -36,7 +36,11 @@ data class BasketDetailState(
     val isExtraDiscountValid: Boolean = true,
     
     // UI states
-    val isDataLoaded: Boolean = false
+    val isDataLoaded: Boolean = false,
+    
+    // Delete confirmation dialog
+    val showDeleteConfirmationDialog: Boolean = false,
+    val articleToDelete: BasketArticle? = null
 ) {
     val isFormValid: Boolean
         get() = isOldGoldItemCostValid && isExtraDiscountValid && isDataLoaded
