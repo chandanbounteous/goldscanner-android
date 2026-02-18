@@ -271,13 +271,19 @@ fun BasketDetailScreen(
                     }
                     
 
-                    // Basket Status Card - moved below totals
+                    // Basket Status Card - conditional rendering based on basket state
                     item {
-                        BasketStatusCard(
-                            isBilled = isBilled,
-                            onBilledChanged = { isBilled = it },
-                            basketStatus = uiState.basketDetail?.isBilled?.let { if (it) "Billed" else "Not Billed" }
-                        )
+                        if (uiState.basketDetail?.isDiscarded == true) {
+                            // Show discarded status for discarded baskets
+                            DiscardedBasketStatusCard()
+                        } else {
+                            // Show normal basket status card for active/billed baskets
+                            BasketStatusCard(
+                                isBilled = isBilled,
+                                onBilledChanged = { isBilled = it },
+                                basketStatus = uiState.basketDetail?.isBilled?.let { if (it) "Billed" else "Not Billed" }
+                            )
+                        }
                     }
                     
                     // Bottom Action Buttons - Prominent buttons at the bottom
@@ -289,8 +295,8 @@ fun BasketDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             // Conditional button based on basket's billed status
-                            if (uiState.basketDetail?.isBilled == true) {
-                                // Print Bill Button - Only shown for billed baskets
+                            if (uiState.basketDetail?.isBilled == true && uiState.basketDetail?.isDiscarded != true) {
+                                // Print Bill Button - Only shown for billed and non-discarded baskets
                                 Button(
                                     onClick = {
                                         // TODO: Implement print bill functionality
@@ -312,8 +318,8 @@ fun BasketDetailScreen(
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
-                            } else {
-                                // Save/Bill Basket Button - Only shown for non-billed baskets
+                            } else if (uiState.basketDetail?.isDiscarded != true) {
+                                // Save/Bill Basket Button - Only shown for non-billed and non-discarded baskets
                                 Button(
                                     onClick = {
                                         viewModel.saveBasket(isBilled)
@@ -870,6 +876,47 @@ fun BasketStatusCard(
 //                           else MaterialTheme.colorScheme.onSurfaceVariant
 //                )
 //            }
+        }
+    }
+}
+
+/**
+ * Discarded basket status card
+ */
+@Composable
+fun DiscardedBasketStatusCard(
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                text = "BASKET DISCARDED",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Text(
+                text = "This basket has been discarded and cannot be modified",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }
