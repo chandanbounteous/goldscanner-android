@@ -14,6 +14,7 @@ import com.kanishk.goldscanner.domain.usecase.ClearActiveBasketIdUseCase
 import com.kanishk.goldscanner.presentation.ui.screen.BasketDetailState
 import com.kanishk.goldscanner.utils.GoldArticleCalculator
 import com.kanishk.goldscanner.utils.Utils
+import com.kanishk.goldscanner.utils.NepaliDateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -417,6 +418,86 @@ class BasketDetailViewModel(
         if (articleToDelete != null) {
             dismissDeleteConfirmationDialog()
             deleteArticle(articleToDelete.id)
+        }
+    }
+    
+    /**
+     * Show discard basket confirmation dialog
+     */
+    fun showDiscardBasketDialog() {
+        _uiState.value = _uiState.value.copy(showDiscardConfirmationDialog = true)
+    }
+    
+    /**
+     * Dismiss discard basket confirmation dialog
+     */
+    fun dismissDiscardBasketDialog() {
+        _uiState.value = _uiState.value.copy(showDiscardConfirmationDialog = false)
+    }
+    
+    /**
+     * Discard the current basket
+     */
+    fun discardBasket(onNavigateToBasketListing: () -> Unit) {
+        viewModelScope.launch {
+            val basketId = getActiveBasketIdUseCase() ?: return@launch
+            
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                errorMessage = null,
+                showDiscardConfirmationDialog = false
+            )
+            
+            try {
+                // Get current UTC date and Nepali date
+                val currentDateTime = ZonedDateTime.now(ZoneOffset.UTC)
+                val isoDateTime = currentDateTime.format(DateTimeFormatter.ISO_INSTANT)
+                val nepaliDate = NepaliDateUtils.getCurrentNepaliDate()
+                
+                val request = UpdateBasketRequest(
+                    oldGoldItemCost = _uiState.value.updatedOldGoldItemCost,
+                    extraDiscount = _uiState.value.updatedExtraDiscount,
+                    isBilled = false,
+                    isDiscarded = true,
+                    discardedDate = isoDateTime,
+                    discardedDateNepali = NepaliDateRequest(
+                        year = nepaliDate.year,
+                        month = nepaliDate.month,
+                        dayOfMonth = nepaliDate.dayOfMonth
+                    )
+                )
+                
+                when (val result = updateBasketUseCase(basketId, request)) {
+                    is Result.Success -> {
+                        // Clear active basket ID from local storage
+                        clearActiveBasketIdUseCase()
+                        
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            successMessage = "Basket discarded successfully!",
+                            errorMessage = null
+                        )
+                        
+                        // Navigate to basket listing screen
+                        onNavigateToBasketListing()
+                    }
+                    is Result.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.errorResponse.message ?: "Failed to discard basket"
+                        )
+                    }
+                    is Result.Loading -> {
+                        // Already handled above
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error discarding basket", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "An unexpected error occurred while discarding the basket"
+                )
+            }
         }
     }
 }

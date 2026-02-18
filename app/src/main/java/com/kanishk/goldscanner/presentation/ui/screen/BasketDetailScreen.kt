@@ -44,7 +44,8 @@ fun BasketDetailScreen(
     viewModel: BasketDetailViewModel = koinViewModel(),
     onNavigateToArticleListing: () -> Unit = {},
     onNavigateAway: () -> Unit = {},
-    onNavigateToEditArticle: () -> Unit = {}
+    onNavigateToEditArticle: () -> Unit = {},
+    onNavigateToBasketListing: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -347,11 +348,11 @@ fun BasketDetailScreen(
                                 }
                             }
                             
-                            // Discard Basket Button - Only shown for non-billed baskets
-                            if (uiState.basketDetail?.isBilled != true) {
+                            // Discard Basket Button - Only shown for non-billed and non-discarded baskets
+                            if (uiState.basketDetail?.isBilled != true && uiState.basketDetail?.isDiscarded != true) {
                                 OutlinedButton(
                                     onClick = {
-                                        // TODO: Implement discard basket functionality
+                                        viewModel.showDiscardBasketDialog()
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.outlinedButtonColors(
@@ -413,6 +414,48 @@ fun BasketDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.dismissDeleteConfirmationDialog() }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Discard basket confirmation dialog
+    if (uiState.showDiscardConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDiscardBasketDialog() },
+            title = {
+                Text(
+                    text = "Discard Basket",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to discard this basket? All articles will be removed and this action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { 
+                        viewModel.discardBasket(onNavigateToBasketListing = onNavigateToBasketListing)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(
+                        text = "Discard",
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.dismissDiscardBasketDialog() }
                 ) {
                     Text("Cancel")
                 }

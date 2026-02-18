@@ -9,7 +9,10 @@ data class UpdateBasketRequest(
     val isBilled: Boolean,
     val billingDate: String? = null,
     val billingDateNepali: NepaliDateRequest? = null,
-    val billedGoldRate24KPerTola: Double? = null
+    val billedGoldRate24KPerTola: Double? = null,
+    val isDiscarded: Boolean? = null,
+    val discardedDate: String? = null,
+    val discardedDateNepali: NepaliDateRequest? = null
 )
 
 @Serializable

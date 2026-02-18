@@ -29,7 +29,11 @@ fun BasketScreen(
         BasketDetailScreen(
             onNavigateToArticleListing = onNavigateToArticleListing,
             onNavigateToEditArticle = onNavigateToArticleDetail,
-            onNavigateAway = onNavigateAway
+            onNavigateAway = onNavigateAway,
+            onNavigateToBasketListing = {
+                // Refresh active basket check to show basket listing screen
+                basketListViewModel.refreshActiveBasketCheck()
+            }
         )
     } else {
         BasketListScreen(
