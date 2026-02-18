@@ -500,4 +500,24 @@ class BasketDetailViewModel(
             }
         }
     }
+    
+    /**
+     * Navigate to basket listing by clearing the active basket ID
+     */
+    fun navigateToBasketListing(onNavigateToBasketListing: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Clear active basket ID from local storage
+                clearActiveBasketIdUseCase()
+                
+                // Navigate to basket listing screen
+                onNavigateToBasketListing()
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error navigating to basket listing", e)
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Failed to navigate to basket listing"
+                )
+            }
+        }
+    }
 }

@@ -98,7 +98,7 @@ fun BasketDetailScreen(
                     // Show Basket Listing Button - moved from FAB
                     IconButton(
                         onClick = { 
-                            // TODO: Navigate to basket listing screen
+                            viewModel.navigateToBasketListing(onNavigateToBasketListing = onNavigateToBasketListing)
                         }
                     ) {
                         Icon(
