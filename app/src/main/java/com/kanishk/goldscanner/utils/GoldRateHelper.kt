@@ -25,4 +25,27 @@ object GoldRateHelper {
     fun get24KaratGoldRate(goldRateResponse: GoldRateResponse?): Double {
         return goldRateResponse?.rates?.get("24") ?: 0.0
     }
+    
+    /**
+     * Determine effective gold rate for basket item calculations
+     * @param basket BasketDetail containing rate information
+     * @param currentGoldRate Current gold rate from API
+     * @return Effective gold rate to use for calculations
+     */
+    fun getEffectiveGoldRateForBasket(
+        basket: com.kanishk.goldscanner.data.model.response.BasketDetail, 
+        currentGoldRate: Double
+    ): Double {
+        // Check if basket was created today and has a fixed rate
+        val basketCreatedDate = java.time.OffsetDateTime.parse(basket.createdAt).toLocalDate()
+        val today = java.time.LocalDate.now()
+        
+        return if (basket.isGoldRateFixed && basketCreatedDate == today && basket.fixedGoldRate24KPerTola != null) {
+            // Use fixed rate if basket was created today with fixed rate
+            basket.fixedGoldRate24KPerTola
+        } else {
+            // Use current market rate
+            currentGoldRate
+        }
+    }
 }

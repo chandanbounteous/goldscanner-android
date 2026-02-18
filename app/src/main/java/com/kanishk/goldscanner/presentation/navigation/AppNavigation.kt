@@ -63,12 +63,12 @@ fun AppNavigation(navController: NavHostController) {
             ArticleDetailScreen(
                 onNavigateBack = {
                     navController.navigate("main/1") {
-                        popUpTo("main") { inclusive = true }
+                        popUpTo("article_detail") { inclusive = true }
                     }
                 },
                 onNavigateToBasket = {
                     navController.navigate("main/3") {
-                        popUpTo("main") { inclusive = true }
+                        popUpTo("article_detail") { inclusive = true }
                     }
                 }
             )

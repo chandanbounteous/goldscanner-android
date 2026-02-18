@@ -51,6 +51,10 @@ data class ArticleDetailState(
     // Basket availability
     val hasActiveBasket: Boolean = false,
     
+    // Field editability flags
+    val isArticleCodeEditable: Boolean = true,
+    val isKaratEditable: Boolean = true,
+    
     // Available karat options
     val karatOptions: List<Int> = listOf(24, 22, 18, 14)
 ) {

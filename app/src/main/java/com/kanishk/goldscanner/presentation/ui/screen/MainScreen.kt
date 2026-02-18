@@ -63,6 +63,7 @@ fun MainScreen(
                     onNavigateToArticleListing = {
                         selectedTab = 1 // Navigate to Articles tab
                     },
+                    onNavigateToArticleDetail = onNavigateToArticleDetail,
                     onNavigateAway = {
                         // This will be called when navigating away from billed basket
                         // The actual clearing is handled in the DisposableEffect

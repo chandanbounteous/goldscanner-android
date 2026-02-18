@@ -546,4 +546,89 @@ class CustomerApiService(
             throw ApiException.NetworkError(e.message ?: "Network error occurred")
         }
     }
+
+    suspend fun updateBasketArticle(
+        articleId: String,
+        request: com.kanishk.goldscanner.data.model.request.UpdateBasketArticleRequest
+    ): com.kanishk.goldscanner.data.model.response.UpdateBasketArticleResponse {
+        return try {
+            // Check if authentication is needed and get token
+            val tokenManager = networkConfig.getTokenManager()
+            val tokenResult = tokenManager.getValidAccessToken()
+            
+            val response: HttpResponse = when (tokenResult) {
+                is com.kanishk.goldscanner.data.network.TokenResult.Success -> {
+                    networkConfig.client.patch("v1/customer/basket/article/$articleId") {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${tokenResult.token}")
+                            append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        }
+                        setBody(request)
+                    }
+                }
+                is com.kanishk.goldscanner.data.network.TokenResult.Error -> {
+                    throw com.kanishk.goldscanner.data.network.AuthenticationException(tokenResult.message)
+                }
+            }
+            
+            if (response.status.isSuccess()) {
+                val updateArticleResponse: com.kanishk.goldscanner.data.model.response.UpdateBasketArticleResponse = response.body()
+                
+                if (updateArticleResponse.responseCode in 200..299) {
+                    updateArticleResponse
+                } else {
+                    throw ApiException.ClientError(
+                        code = updateArticleResponse.responseCode,
+                        message = updateArticleResponse.responseMessage,
+                        body = updateArticleResponse.responseMessage
+                    )
+                }
+            } else {
+                when (response.status.value) {
+                    401 -> {
+                        throw com.kanishk.goldscanner.data.network.AuthenticationException("Unauthorized access")
+                    }
+                    404 -> {
+                        throw ApiException.ClientError(
+                            code = 404,
+                            message = "Article not found in basket",
+                            body = "Basket article with ID $articleId not found"
+                        )
+                    }
+                    400 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = 400,
+                            message = "Cannot update article - basket may be billed or discarded",
+                            body = errorBody
+                        )
+                    }
+                    in 400..499 -> {
+                        val errorBody = response.bodyAsText()
+                        throw ApiException.ClientError(
+                            code = response.status.value,
+                            message = "Client error: ${response.status.description}",
+                            body = errorBody
+                        )
+                    }
+                    in 500..599 -> {
+                        throw ApiException.ServerError(
+                            code = response.status.value,
+                            message = "Server error: ${response.status.description}",
+                            body = response.bodyAsText()
+                        )
+                    }
+                    else -> {
+                        throw ApiException.NetworkError("HTTP error: ${response.status}")
+                    }
+                }
+            }
+        } catch (e: com.kanishk.goldscanner.data.network.AuthenticationException) {
+            throw e
+        } catch (e: ApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw ApiException.NetworkError(e.message ?: "Network error occurred")
+        }
+    }
 }

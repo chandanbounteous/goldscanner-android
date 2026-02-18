@@ -39,17 +39,30 @@ fun ArticleDetailScreen(
     val sharedEditViewModel: SharedEditArticleViewModel = remember { SharedEditArticleViewModel.getInstance() }
     val uiState by articleDetailViewModel.uiState.collectAsStateWithLifecycle()
     val selectedArticle by sharedEditViewModel.selectedArticle.collectAsStateWithLifecycle()
+    val basketEditContext by sharedEditViewModel.basketEditContext.collectAsStateWithLifecycle()
     var showKaratDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
     
     // Initialize mode and populate article if editing
-    LaunchedEffect(selectedArticle) {
-        if (selectedArticle != null) {
-            // Edit mode
-            articleDetailViewModel.populateArticleForEdit(selectedArticle!!.article)
-        } else {
-            // Create mode
-            articleDetailViewModel.setMode(ArticleDetailMode.CREATE_NEW)
+    LaunchedEffect(selectedArticle, basketEditContext) {
+        when {
+            basketEditContext != null -> {
+                // Basket editing mode
+                val context = basketEditContext!! // Create local variable for non-null access
+                articleDetailViewModel.initializeForBasketEdit(
+                    context.basketDetail,
+                    context.basketArticle
+                )
+            }
+            selectedArticle != null -> {
+                // Regular article editing mode
+                val article = selectedArticle!! // Create local variable for non-null access
+                articleDetailViewModel.populateArticleForEdit(article.article)
+            }
+            else -> {
+                // Create mode
+                articleDetailViewModel.setMode(ArticleDetailMode.CREATE_NEW)
+            }
         }
     }
     
@@ -59,10 +72,18 @@ fun ArticleDetailScreen(
             // Show success toast
             Toast.makeText(context, uiState.successMessage, Toast.LENGTH_SHORT).show()
             
-            // Clear messages and navigate back immediately
+            // Clear messages and navigate appropriately based on context
             articleDetailViewModel.clearMessages()
             sharedEditViewModel.clearSelectedArticle()
-            onNavigateBack()
+            
+            // Navigate based on whether we're editing a basket item or not
+            if (basketEditContext != null) {
+                // We're editing a basket item, navigate back to basket
+                onNavigateToBasket()
+            } else {
+                // Regular article editing or creation, navigate back to articles
+                onNavigateBack()
+            }
         }
     }
     
@@ -79,7 +100,12 @@ fun ArticleDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = {
                         sharedEditViewModel.clearSelectedArticle()
-                        onNavigateBack()
+                        // Use appropriate navigation based on context
+                        if (basketEditContext != null) {
+                            onNavigateToBasket()
+                        } else {
+                            onNavigateBack()
+                        }
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
@@ -139,14 +165,14 @@ fun ArticleDetailScreen(
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                                disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) 
+                                disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT || uiState.mode == ArticleDetailMode.UPDATE_BASKET_ITEM) 
                                     MaterialTheme.colorScheme.onSurface else 
                                     MaterialTheme.colorScheme.onSurface
                             ),
-                            enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT
+                            enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM
                         )
                         
-                        if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                        if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM) {
                             ExposedDropdownMenu(
                                 expanded = showKaratDropdown,
                                 onDismissRequest = { showKaratDropdown = false }
@@ -177,24 +203,28 @@ fun ArticleDetailScreen(
                     OutlinedTextField(
                         value = uiState.articleCode,
                         onValueChange = { 
-                            if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                            if (uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM) {
                                 articleDetailViewModel.updateArticleCode(it)
                             }
                         },
-                        readOnly = uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT,
+                        readOnly = uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT || uiState.mode == ArticleDetailMode.UPDATE_BASKET_ITEM,
                         label = { Text("Article Code") },
                         placeholder = { Text("e.g., RNC1234") },
-                        isError = !uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT,
-                        supportingText = if (!uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT) {
+                        isError = !uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && 
+                                  uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && 
+                                  uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM,
+                        supportingText = if (!uiState.isArticleCodeValid && uiState.articleCode.isNotEmpty() && 
+                                            uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && 
+                                            uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM) {
                             { Text("Format: ABC1234 (3 letters + 4 digits)") }
                         } else null,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT) 
+                            disabledTextColor = if (uiState.mode == ArticleDetailMode.UPDATE_INDEPENDENT || uiState.mode == ArticleDetailMode.UPDATE_BASKET_ITEM) 
                                 MaterialTheme.colorScheme.onSurface else 
                                 MaterialTheme.colorScheme.onSurface
                         ),
-                        enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT
+                        enabled = uiState.mode != ArticleDetailMode.UPDATE_INDEPENDENT && uiState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM
                     )
                     
                     // Net Weight
@@ -447,7 +477,12 @@ fun ArticleDetailScreen(
                             OutlinedButton(
                                 onClick = {
                                     sharedEditViewModel.clearSelectedArticle()
-                                    onNavigateBack()
+                                    // Use appropriate navigation based on context
+                                    if (basketEditContext != null) {
+                                        onNavigateToBasket()
+                                    } else {
+                                        onNavigateBack()
+                                    }
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -459,14 +494,10 @@ fun ArticleDetailScreen(
                         
                         Button(
                             onClick = {
-                                articleDetailViewModel.addToBasket(
+                                articleDetailViewModel.updateBasketArticle(
                                     onSuccess = {
-                                        Toast.makeText(
-                                            context,
-                                            "Article added to basket successfully!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        onNavigateToBasket()
+                                        // Don't navigate here - let the LaunchedEffect handle navigation
+                                        // The success message will be set and LaunchedEffect will handle proper navigation
                                     },
                                     onError = { message ->
                                         Toast.makeText(
@@ -486,17 +517,7 @@ fun ArticleDetailScreen(
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.gold_basket),
-                                        contentDescription = "Add to basket",
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text("Save")
-                                }
+                                Text("Update Article")
                             }
                         }
                     }

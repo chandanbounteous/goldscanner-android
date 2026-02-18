@@ -35,4 +35,9 @@ interface CustomerRepository {
     suspend fun deleteBasketArticle(
         articleId: String
     ): Result<Unit>
+
+    suspend fun updateBasketArticle(
+        articleId: String,
+        request: com.kanishk.goldscanner.data.model.request.UpdateBasketArticleRequest
+    ): Result<com.kanishk.goldscanner.data.model.response.UpdateBasketArticleResponse>
 }

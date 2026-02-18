@@ -13,6 +13,7 @@ import com.kanishk.goldscanner.data.model.Basket
 fun BasketScreen(
     basketListViewModel: BasketListViewModel = koinViewModel(),
     onNavigateToArticleListing: () -> Unit = {},
+    onNavigateToArticleDetail: () -> Unit = {},
     onNavigateAway: () -> Unit = {}
 ) {
     val uiState by basketListViewModel.uiState.collectAsState()
@@ -27,6 +28,7 @@ fun BasketScreen(
     if (uiState.hasActiveBasket && uiState.activeBasketId != null) {
         BasketDetailScreen(
             onNavigateToArticleListing = onNavigateToArticleListing,
+            onNavigateToEditArticle = onNavigateToArticleDetail,
             onNavigateAway = onNavigateAway
         )
     } else {

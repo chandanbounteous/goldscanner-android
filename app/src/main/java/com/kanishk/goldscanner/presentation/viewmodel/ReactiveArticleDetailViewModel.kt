@@ -29,7 +29,8 @@ class ReactiveArticleDetailViewModel(
     private val createArticleUseCase: CreateArticleUseCase,
     private val updateArticleUseCase: UpdateArticleUseCase,
     private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
-    private val addArticleToBasketUseCase: AddArticleToBasketUseCase
+    private val addArticleToBasketUseCase: AddArticleToBasketUseCase,
+    private val updateBasketArticleUseCase: com.kanishk.goldscanner.domain.usecase.basket.UpdateBasketArticleUseCase
 ) : ViewModel() {
     
     // Reactive calculation engine
@@ -48,6 +49,10 @@ class ReactiveArticleDetailViewModel(
     
     // Article being edited (for UPDATE_INDEPENDENT mode)
     private var editingArticle: GoldArticle? = null
+    
+    // Basket context for UPDATE_BASKET_ITEM mode
+    private var basketContext: com.kanishk.goldscanner.data.model.response.BasketDetail? = null
+    private var basketArticleContext: com.kanishk.goldscanner.data.model.response.BasketArticle? = null
     
     init {
         loadGoldRates()
@@ -256,6 +261,72 @@ class ReactiveArticleDetailViewModel(
             val goldRateForKarat = GoldRateHelper.getGoldRateForKarat(response, article.karat)
             updateReactiveField("goldRate24KPerTola", goldRateForKarat)
         }
+    }
+    
+    /**
+     * Initialize the screen for editing a basket article item
+     */
+    fun initializeForBasketEdit(
+        basketDetail: com.kanishk.goldscanner.data.model.response.BasketDetail,
+        basketArticle: com.kanishk.goldscanner.data.model.response.BasketArticle
+    ) {
+        basketContext = basketDetail
+        basketArticleContext = basketArticle
+        setMode(ArticleDetailMode.UPDATE_BASKET_ITEM)
+        
+        // Load gold rates and determine effective gold rate for this basket
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            
+            when (val result = goldRateRepository.getCurrentGoldRate()) {
+                is Result.Success -> {
+                    goldRateResponse = result.data
+                    
+                    // Determine effective gold rate based on basket creation date
+                    val currentGoldRate24K = GoldRateHelper.get24KaratGoldRate(result.data)
+                    val effectiveGoldRate = GoldRateHelper.getEffectiveGoldRateForBasket(
+                        basketDetail, currentGoldRate24K
+                    )
+                    
+                    // Update gold rate in reactive article first
+                    updateReactiveField("goldRate24KPerTola", effectiveGoldRate)
+                    
+                    // Then populate fields from basket article
+                    populateFieldsFromBasketArticle(basketArticle)
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        hasActiveBasket = false, // Don't show "Save to Basket" button in edit mode
+                        isArticleCodeEditable = false, // Article code not editable in basket edit
+                        isKaratEditable = false // Karat not editable in basket edit
+                    )
+                }
+                is Result.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.errorResponse.message ?: "Failed to load gold rates"
+                    )
+                }
+                is Result.Loading -> {
+                    // Already in loading state
+                }
+            }
+        }
+    }
+    
+    /**
+     * Populate fields from basket article for editing
+     */
+    private fun populateFieldsFromBasketArticle(basketArticle: com.kanishk.goldscanner.data.model.response.BasketArticle) {
+        // Update reactive fields with basket article values
+        updateReactiveField("articleCode", basketArticle.articleCode)
+        updateReactiveField("karat", basketArticle.karat)
+        updateReactiveField("netWeight", basketArticle.netWeight)
+        updateReactiveField("grossWeight", basketArticle.grossWeight)
+        updateReactiveField("addOnCost", basketArticle.addOnCost)
+        updateReactiveField("wastage", basketArticle.wastage)
+        updateReactiveField("makingCharge", basketArticle.makingCharge)
+        updateReactiveField("discount", basketArticle.discount)
     }
     
     fun updateKarat(karat: Int) {
@@ -592,5 +663,82 @@ class ReactiveArticleDetailViewModel(
     fun recalculateAll() {
         val recalculatedArticle = calculationEngine.recalculateAll(_reactiveArticle.value)
         _reactiveArticle.value = recalculatedArticle
+    }
+    
+    /**
+     * Update basket article with current form data
+     */
+    fun updateBasketArticle(onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        val currentState = _uiState.value
+        val currentArticle = _reactiveArticle.value
+        val basketArticle = basketArticleContext
+        
+        if (currentState.mode != ArticleDetailMode.UPDATE_BASKET_ITEM) {
+            val errorMessage = "Invalid operation - not in basket edit mode"
+            _uiState.value = currentState.copy(errorMessage = errorMessage)
+            onError(errorMessage)
+            return
+        }
+        
+        if (basketArticle == null) {
+            val errorMessage = "Basket article context not found"
+            _uiState.value = currentState.copy(errorMessage = errorMessage)
+            onError(errorMessage)
+            return
+        }
+        
+        if (!currentState.isFormValid) {
+            val errorMessage = "Please fill all required fields correctly"
+            _uiState.value = currentState.copy(errorMessage = errorMessage)
+            onError(errorMessage)
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.value = currentState.copy(isLoading = true)
+            
+            try {
+                // Call use case to update basket article
+                when (val result = updateBasketArticleUseCase(
+                    articleId = basketArticle.id,
+                    netWeight = currentArticle.netWeight,
+                    grossWeight = currentArticle.grossWeight,
+                    addOnCost = currentArticle.addOnCost,
+                    wastage = currentArticle.wastage,
+                    makingCharge = currentArticle.makingCharge,
+                    discount = currentArticle.discount
+                )) {
+                    is Result.Success -> {
+                        val successMessage = "Article updated in basket successfully"
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            successMessage = successMessage,
+                            errorMessage = null
+                        )
+                        onSuccess()
+                    }
+                    is Result.Error -> {
+                        val errorMessage = result.errorResponse.message ?: "Failed to update article in basket"
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            errorMessage = errorMessage,
+                            successMessage = null
+                        )
+                        onError(errorMessage)
+                    }
+                    is Result.Loading -> {
+                        // Already handled by setting isLoading = true above
+                    }
+                }
+                
+            } catch (e: Exception) {
+                val errorMessage = e.message ?: "Failed to update article in basket"
+                _uiState.value = currentState.copy(
+                    isLoading = false,
+                    errorMessage = errorMessage
+                )
+                onError(errorMessage)
+            }
+        }
     }
 }

@@ -128,4 +128,23 @@ class CustomerRepositoryImpl(
             Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
         }
     }
+
+    override suspend fun updateBasketArticle(
+        articleId: String,
+        request: com.kanishk.goldscanner.data.model.request.UpdateBasketArticleRequest
+    ): Result<com.kanishk.goldscanner.data.model.response.UpdateBasketArticleResponse> {
+        return try {
+            val response = customerApiService.updateBasketArticle(articleId, request)
+            Result.Success(response)
+        } catch (e: AuthenticationException) {
+            Result.Error(ErrorResponse.authenticationError(e.message ?: "Authentication failed"))
+        } catch (e: ApiException.ClientError) {
+            Result.Error(ErrorResponse.clientError(e.code, e.message, e.body))
+        } catch (e: ApiException.NetworkError) {
+            Result.Error(ErrorResponse.networkError(e.message))
+        } catch (e: Exception) {
+            Log.e("CustomerRepository", "Failed to update basket article", e)
+            Result.Error(ErrorResponse.networkError("An unexpected error occurred: ${e.message}"))
+        }
+    }
 }

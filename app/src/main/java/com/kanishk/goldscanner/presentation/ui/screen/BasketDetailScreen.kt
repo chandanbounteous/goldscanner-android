@@ -28,6 +28,8 @@ import android.widget.Toast
 import androidx.compose.runtime.DisposableEffect
 import org.koin.androidx.compose.koinViewModel
 import com.kanishk.goldscanner.presentation.viewmodel.BasketDetailViewModel
+import com.kanishk.goldscanner.presentation.viewmodel.SharedEditArticleViewModel
+import androidx.compose.runtime.remember
 import com.kanishk.goldscanner.data.model.response.BasketArticle
 import com.kanishk.goldscanner.presentation.ui.component.CompactGoldRateCard
 import com.kanishk.goldscanner.utils.Utils
@@ -41,10 +43,14 @@ import java.text.DecimalFormat
 fun BasketDetailScreen(
     viewModel: BasketDetailViewModel = koinViewModel(),
     onNavigateToArticleListing: () -> Unit = {},
-    onNavigateAway: () -> Unit = {}
+    onNavigateAway: () -> Unit = {},
+    onNavigateToEditArticle: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    
+    // Get shared edit view model for navigation
+    val sharedEditViewModel: SharedEditArticleViewModel = remember { SharedEditArticleViewModel.getInstance() }
     
     LaunchedEffect(Unit) {
         viewModel.loadBasketDetails()
@@ -218,7 +224,11 @@ fun BasketDetailScreen(
                             BasketArticleCard(
                                 article = article,
                                 onEditClick = { editArticle ->
-                                    // TODO: Navigate to article edit screen
+                                    // Set basket article for editing in shared view model and navigate
+                                    uiState.basketDetail?.let { basket ->
+                                        sharedEditViewModel.selectBasketArticleForEdit(basket, editArticle)
+                                        onNavigateToEditArticle()
+                                    }
                                 },
                                 onDeleteClick = { deleteArticle ->
                                     // Show confirmation dialog before deleting
