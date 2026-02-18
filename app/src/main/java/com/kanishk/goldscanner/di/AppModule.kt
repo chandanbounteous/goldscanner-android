@@ -17,6 +17,6 @@ val appModule = module {
     viewModel { com.kanishk.goldscanner.presentation.viewmodel.ArticleListViewModel(get()) }
     viewModel { com.kanishk.goldscanner.presentation.viewmodel.ReactiveArticleDetailViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { com.kanishk.goldscanner.presentation.viewmodel.CustomerListViewModel(get(), get(), get()) }
-    viewModel { com.kanishk.goldscanner.presentation.viewmodel.BasketListViewModel(get(), get()) }
+    viewModel { com.kanishk.goldscanner.presentation.viewmodel.BasketListViewModel(get(), get(), get()) }
     viewModel { com.kanishk.goldscanner.presentation.viewmodel.BasketDetailViewModel(get(), get(), get(), get(), get(), get()) }
 }

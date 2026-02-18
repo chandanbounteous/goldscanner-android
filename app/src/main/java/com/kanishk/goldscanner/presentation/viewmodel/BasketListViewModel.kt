@@ -8,13 +8,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.kanishk.goldscanner.domain.usecase.basket.SearchBasketsUseCase
 import com.kanishk.goldscanner.domain.usecase.basket.GetActiveBasketIdUseCase
+import com.kanishk.goldscanner.domain.usecase.basket.SetActiveBasketIdUseCase
 import com.kanishk.goldscanner.data.model.Basket
 import com.kanishk.goldscanner.data.model.BasketSearchFilter
 import com.kanishk.goldscanner.data.model.response.Result
+import android.util.Log
 
 class BasketListViewModel(
     private val searchBasketsUseCase: SearchBasketsUseCase,
-    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase
+    private val getActiveBasketIdUseCase: GetActiveBasketIdUseCase,
+    private val setActiveBasketIdUseCase: SetActiveBasketIdUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BasketListUiState())
@@ -169,6 +172,28 @@ class BasketListViewModel(
      */
     fun refreshActiveBasketCheck() {
         checkActiveBasket()
+    }
+    
+    /**
+     * Select a basket by setting it as the active basket and refreshing the check
+     */
+    fun selectBasket(basket: Basket) {
+        viewModelScope.launch {
+            try {
+                // Set the selected basket as active basket
+                setActiveBasketIdUseCase(basket.id)
+                
+                // Refresh active basket check to trigger navigation to detail screen
+                refreshActiveBasketCheck()
+                
+                // The UI will automatically navigate to BasketDetailScreen when hasActiveBasket becomes true
+            } catch (e: Exception) {
+                Log.e("BasketListViewModel", "Error selecting basket: ${basket.id}", e)
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Failed to select basket"
+                )
+            }
+        }
     }
 }
 

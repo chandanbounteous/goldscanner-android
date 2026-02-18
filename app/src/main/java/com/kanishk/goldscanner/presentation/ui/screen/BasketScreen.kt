@@ -38,8 +38,9 @@ fun BasketScreen(
     } else {
         BasketListScreen(
             onBasketClick = { basket ->
-                // TODO: Handle basket selection if needed
-                // For now, showing active basket has priority
+                // Handle basket selection by setting it as active basket
+                // The state change will automatically trigger navigation to BasketDetailScreen
+                basketListViewModel.selectBasket(basket)
             },
             viewModel = basketListViewModel
         )
