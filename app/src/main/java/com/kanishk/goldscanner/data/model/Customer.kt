@@ -10,9 +10,9 @@ data class Customer(
     @SerialName("firstName")
     val firstName: String,
     @SerialName("lastName")
-    val lastName: String,
+    val lastName: String? = null,
     @SerialName("phone")
-    val phone: String,
+    val phone: String? = null,
     @SerialName("email")
     val email: String? = null,
     @SerialName("createdAt")
@@ -21,5 +21,5 @@ data class Customer(
     val updatedAt: String
 ) {
     val fullName: String
-        get() = "$firstName $lastName".trim()
+        get() = "$firstName ${lastName ?: ""}".trim()
 }

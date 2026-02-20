@@ -51,10 +51,10 @@ fun CustomerListItem(
                 )
                 
                 // Phone number
-                if (customer.phone.isNotEmpty()) {
+                if (!customer.phone.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = customer.phone,
+                        text = customer.phone ?: "",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
