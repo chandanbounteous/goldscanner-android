@@ -203,8 +203,8 @@ fun BasketDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    // Add Article Button - Only shown for non-billed baskets
-                                    if (uiState.basketDetail?.isBilled != true) {
+                                    // Add Article Button - Only shown for non-billed and non-discarded baskets
+                                    if (uiState.basketDetail?.isBilled != true && uiState.basketDetail?.isDiscarded != true) {
                                         IconButton(
                                             onClick = { 
                                                 onNavigateToArticleListing()
@@ -224,6 +224,7 @@ fun BasketDetailScreen(
                         items(uiState.articles) { article ->
                             BasketArticleCard(
                                 article = article,
+                                showActionButtons = uiState.basketDetail?.isBilled != true && uiState.basketDetail?.isDiscarded != true,
                                 onEditClick = { editArticle ->
                                     // Set basket article for editing in shared view model and navigate
                                     uiState.basketDetail?.let { basket ->
@@ -254,6 +255,7 @@ fun BasketDetailScreen(
                             extraDiscount = uiState.extraDiscountText,
                             isOldGoldItemCostValid = uiState.isOldGoldItemCostValid,
                             isExtraDiscountValid = uiState.isExtraDiscountValid,
+                            isReadOnly = uiState.basketDetail?.isBilled == true || uiState.basketDetail?.isDiscarded == true,
                             onOldGoldItemCostChanged = viewModel::updateOldGoldItemCost,
                             onExtraDiscountChanged = viewModel::updateExtraDiscount
                         )
@@ -273,16 +275,23 @@ fun BasketDetailScreen(
 
                     // Basket Status Card - conditional rendering based on basket state
                     item {
-                        if (uiState.basketDetail?.isDiscarded == true) {
-                            // Show discarded status for discarded baskets
-                            DiscardedBasketStatusCard()
-                        } else {
-                            // Show normal basket status card for active/billed baskets
-                            BasketStatusCard(
-                                isBilled = isBilled,
-                                onBilledChanged = { isBilled = it },
-                                basketStatus = uiState.basketDetail?.isBilled?.let { if (it) "Billed" else "Not Billed" }
-                            )
+                        when {
+                            uiState.basketDetail?.isDiscarded == true -> {
+                                // Show discarded status for discarded baskets
+                                DiscardedBasketStatusCard()
+                            }
+                            uiState.basketDetail?.isBilled == true -> {
+                                // Show billed status for billed baskets
+                                BilledBasketStatusCard()
+                            }
+                            else -> {
+                                // Show normal basket status card for active baskets
+                                BasketStatusCard(
+                                    isBilled = isBilled,
+                                    onBilledChanged = { isBilled = it },
+                                    basketStatus = uiState.basketDetail?.isBilled?.let { if (it) "Billed" else "Not Billed" }
+                                )
+                            }
                         }
                     }
                     
@@ -528,6 +537,7 @@ fun CustomerInfoCard(
 @Composable
 fun BasketArticleCard(
     article: BasketArticle,
+    showActionButtons: Boolean = true,
     onEditClick: (BasketArticle) -> Unit = {},
     onDeleteClick: (BasketArticle) -> Unit = {}
 ) {
@@ -567,36 +577,38 @@ fun BasketArticleCard(
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
-                    // Action buttons
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        IconButton(
-                            onClick = { onEditClick(article) },
-                            modifier = Modifier.size(32.dp)
+                    // Action buttons - only show if showActionButtons is true
+                    if (showActionButtons) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Article",
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            IconButton(
+                                onClick = { onEditClick(article) },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Article",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            
+                            IconButton(
+                                onClick = { onDeleteClick(article) },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Article",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                         
-                        IconButton(
-                            onClick = { onDeleteClick(article) },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Article",
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
                         text = "रु ${Utils.formatDouble(article.postTaxArticleCost)}",
@@ -620,6 +632,7 @@ fun CalculationInputsCard(
     extraDiscount: String,
     isOldGoldItemCostValid: Boolean,
     isExtraDiscountValid: Boolean,
+    isReadOnly: Boolean = false,
     onOldGoldItemCostChanged: (String) -> Unit,
     onExtraDiscountChanged: (String) -> Unit
 ) {
@@ -655,11 +668,13 @@ fun CalculationInputsCard(
             
             OutlinedTextField(
                 value = oldGoldItemCost,
-                onValueChange = onOldGoldItemCostChanged,
+                onValueChange = if (isReadOnly) { {} } else onOldGoldItemCostChanged,
                 label = { Text("Old Gold Item Cost") },
                 prefix = { Text("रु ") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 isError = !isOldGoldItemCostValid,
+                readOnly = isReadOnly,
+                enabled = !isReadOnly,
                 supportingText = if (!isOldGoldItemCostValid) {
                     { Text("Please enter a valid positive number") }
                 } else null,
@@ -670,11 +685,13 @@ fun CalculationInputsCard(
             
             OutlinedTextField(
                 value = extraDiscount,
-                onValueChange = onExtraDiscountChanged,
+                onValueChange = if (isReadOnly) { {} } else onExtraDiscountChanged,
                 label = { Text("Extra Discount") },
                 prefix = { Text("रु ") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 isError = !isExtraDiscountValid,
+                readOnly = isReadOnly,
+                enabled = !isReadOnly,
                 supportingText = if (!isExtraDiscountValid) {
                     { Text("Please enter a valid positive number") }
                 } else null,
@@ -915,6 +932,47 @@ fun DiscardedBasketStatusCard(
                 text = "This basket has been discarded and cannot be modified",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Billed basket status card
+ */
+@Composable
+fun BilledBasketStatusCard(
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                text = "BASKET BILLED",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = "This basket has been billed and cannot be modified",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
