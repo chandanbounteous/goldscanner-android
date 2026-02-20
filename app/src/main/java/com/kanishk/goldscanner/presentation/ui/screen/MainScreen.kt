@@ -58,7 +58,10 @@ fun MainScreen(
             when (selectedTab) {
                 0 -> GoldRateScreen()
                 1 -> ArticlesTabScreen(onNavigateToArticleDetail)
-                2 -> CustomerTabScreen(onNavigateToCustomers)
+                2 -> CustomerTabScreen(
+                    onNavigateToCustomers = onNavigateToCustomers,
+                    onNavigateToBasket = { selectedTab = 3 } // Navigate to Basket tab
+                )
                 3 -> BasketScreen(
                     onNavigateToArticleListing = {
                         selectedTab = 1 // Navigate to Articles tab
@@ -82,9 +85,10 @@ fun ArticlesTabScreen(onNavigateToArticleDetail: () -> Unit = {}) {
 
 @Composable
 fun CustomerTabScreen(
-    onNavigateToCustomers: () -> Unit = {}
+    onNavigateToCustomers: () -> Unit = {},
+    onNavigateToBasket: () -> Unit = {}
 ) {
-    CustomerScreen()
+    CustomerScreen(onNavigateToBasket = onNavigateToBasket)
 }
 
 @Composable

@@ -97,7 +97,11 @@ class CustomerListViewModel(
         }
     }
 
-    fun onCustomerSelected(customer: Customer, isLockRateChecked: Boolean = false) {
+    fun onCustomerSelected(
+        customer: Customer, 
+        isLockRateChecked: Boolean = false,
+        onNavigateToBasket: () -> Unit = {}
+    ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 creatingBasketForCustomerId = customer.id,
@@ -110,6 +114,9 @@ class CustomerListViewModel(
                         creatingBasketForCustomerId = null,
                         showSuccessMessage = "Basket created successfully for ${customer.fullName}"
                     )
+                    
+                    // Navigate to basket tab to show the newly created basket
+                    onNavigateToBasket()
                 }
                 is Result.Error -> {
                     _uiState.value = _uiState.value.copy(

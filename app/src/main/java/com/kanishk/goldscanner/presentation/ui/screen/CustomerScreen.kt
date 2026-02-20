@@ -32,7 +32,8 @@ import android.widget.Toast
 @Composable
 fun CustomerScreen(
     modifier: Modifier = Modifier,
-    customerListViewModel: CustomerListViewModel = koinViewModel()
+    customerListViewModel: CustomerListViewModel = koinViewModel(),
+    onNavigateToBasket: () -> Unit = {}
 ) {
     val customerUiState by customerListViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -189,7 +190,11 @@ fun CustomerScreen(
                         isLockRateChecked = isLocked,
                         onLockRateChanged = { isLocked = it },
                         onSelectClicked = { 
-                            customerListViewModel.onCustomerSelected(customer, isLocked) 
+                            customerListViewModel.onCustomerSelected(
+                                customer = customer, 
+                                isLockRateChecked = isLocked,
+                                onNavigateToBasket = onNavigateToBasket
+                            ) 
                         },
                         isCreatingBasket = customerUiState.creatingBasketForCustomerId == customer.id
                     )
