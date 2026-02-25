@@ -139,8 +139,9 @@ class ReactiveCalculationEngine {
             }
             "articleCode" -> {
                 // Article code pattern: [A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9]
-                val pattern = Regex("^[A-Z]{3}[0-9]{4}$")
-                pattern.matches(value as String)
+                (value as String).isNotEmpty()
+//                val pattern = Regex("^[A-Z]{3}[0-9]{4}$")
+//                pattern.matches(value as String)
             }
             else -> true
         }
