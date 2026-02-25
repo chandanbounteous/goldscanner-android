@@ -12,4 +12,5 @@ val networkModule = module {
     single { GoldRateApiService(get<NetworkConfig>()) }
     single { com.kanishk.goldscanner.data.network.service.GoldArticleApiService(get<NetworkConfig>()) }
     single { com.kanishk.goldscanner.data.network.service.CustomerApiService(get<NetworkConfig>()) }
+    single { com.kanishk.goldscanner.data.network.service.InvoiceApiService(get<NetworkConfig>()) }
 }

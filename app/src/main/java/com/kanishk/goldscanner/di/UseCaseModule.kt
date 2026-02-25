@@ -32,4 +32,5 @@ val useCaseModule = module {
     factory { UpdateBasketArticleUseCase(get()) }
     factory { ClearActiveBasketIdUseCase(get()) }
     factory { SetActiveBasketIdUseCase(get()) }
+    factory { com.kanishk.goldscanner.domain.usecase.GenerateInvoicePdfUseCase(get()) }
 }

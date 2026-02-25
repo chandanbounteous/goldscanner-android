@@ -31,7 +31,8 @@ class BasketDetailViewModel(
     private val updateBasketUseCase: UpdateBasketUseCase,
     private val deleteBasketArticleUseCase: DeleteBasketArticleUseCase,
     private val getCurrentGoldRateUseCase: GetCurrentGoldRateUseCase,
-    private val clearActiveBasketIdUseCase: ClearActiveBasketIdUseCase
+    private val clearActiveBasketIdUseCase: ClearActiveBasketIdUseCase,
+    private val generateInvoicePdfUseCase: com.kanishk.goldscanner.domain.usecase.GenerateInvoicePdfUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(BasketDetailState())
@@ -516,6 +517,45 @@ class BasketDetailViewModel(
                 Log.e("BasketDetailViewModel", "Error navigating to basket listing", e)
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "Failed to navigate to basket listing"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Generate and open PDF invoice for the current basket
+     */
+    fun generateInvoicePdf(onPdfGenerated: (ByteArray) -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            
+            try {
+                // Get active basket ID
+                val basketId = getActiveBasketIdUseCase()
+                if (basketId == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No active basket found"
+                    )
+                    return@launch
+                }
+                
+                // Generate PDF
+                val pdfData = generateInvoicePdfUseCase(basketId)
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    successMessage = "Invoice PDF generated successfully"
+                )
+                
+                // Call the callback to handle PDF opening
+                onPdfGenerated(pdfData)
+                
+            } catch (e: Exception) {
+                Log.e("BasketDetailViewModel", "Error generating PDF", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Failed to generate invoice PDF: ${e.message}"
                 )
             }
         }

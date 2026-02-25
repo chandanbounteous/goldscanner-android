@@ -305,13 +305,26 @@ fun BasketDetailScreen(
                         ) {
                             // Conditional button based on basket's billed status
                             if (uiState.basketDetail?.isBilled == true && uiState.basketDetail?.isDiscarded != true) {
-                                // Print Bill Button - Only shown for billed and non-discarded baskets
+                                // Display Bill Button - Only shown for billed and non-discarded baskets
                                 Button(
                                     onClick = {
-                                        // TODO: Implement print bill functionality
-                                        Toast.makeText(context, "Print Bill functionality coming soon", Toast.LENGTH_SHORT).show()
+                                        viewModel.generateInvoicePdf { pdfData ->
+                                            val success = com.kanishk.goldscanner.utils.PdfUtils.savePdfAndOpen(
+                                                context, 
+                                                pdfData, 
+                                                "invoice_${uiState.basketDetail?.basketNumber ?: "unknown"}.pdf"
+                                            )
+                                            if (!success) {
+                                                Toast.makeText(
+                                                    context, 
+                                                    "No PDF viewer app found. Please install a PDF reader.", 
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
+                                    enabled = !uiState.isLoading,
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.tertiary
                                     )
@@ -323,7 +336,7 @@ fun BasketDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Print Bill",
+                                        text = "Display Bill",
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
