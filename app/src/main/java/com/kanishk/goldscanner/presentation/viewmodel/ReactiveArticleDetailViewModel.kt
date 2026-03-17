@@ -18,10 +18,10 @@ import com.kanishk.goldscanner.utils.ReactiveGoldArticle
 import com.kanishk.goldscanner.utils.ReactiveCalculationEngine
 import com.kanishk.goldscanner.utils.copyField
 import com.kanishk.goldscanner.utils.GoldRateHelper
+import com.kanishk.goldscanner.utils.Utils.Companion.roundToDecimalPlaces
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ReactiveArticleDetailViewModel(
@@ -180,7 +180,7 @@ class ReactiveArticleDetailViewModel(
             GoldRateHelper.getGoldRateForKarat(it, article.karat) 
         } ?: 0.0
         
-        val roundedCurrentGoldRate = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(currentGoldRatePerKarat, 2)
+        val roundedCurrentGoldRate = roundToDecimalPlaces(currentGoldRatePerKarat, 2)
         
         // Update validation states for all fields
         val isNetWeightValid = calculationEngine.validateField("netWeight", article.netWeight, article)
@@ -195,18 +195,18 @@ class ReactiveArticleDetailViewModel(
             karat = article.karat,
             goldRateAsPerKaratPerTola = roundedCurrentGoldRate,
             articleCode = article.articleCode,
-            netWeight = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.netWeight, 2),
-            grossWeight = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.grossWeight, 2),
-            addOnCost = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.addOnCost, 2),
-            wastage = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.wastage, 2),
-            totalWeight = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.totalWeight, 2),
-            articleCostAsPerWeightAndKarat = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.articleCostAsPerWeightAndKarat, 2),
-            makingCharge = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.makingCharge, 2),
-            discount = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.discount, 2),
-            articleCostBeforeTax = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.articleCostBeforeTax, 2),
-            luxuryTax = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.luxuryTax, 2),
-            articleCostAfterTax = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.articleCostAfterTax, 2),
-            finalEstimatedCost = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(article.finalEstimatedCost, 2),
+            netWeight = roundToDecimalPlaces(article.netWeight, 2),
+            grossWeight = roundToDecimalPlaces(article.grossWeight, 2),
+            addOnCost = roundToDecimalPlaces(article.addOnCost, 2),
+            wastage = roundToDecimalPlaces(article.wastage, 2),
+            totalWeight = roundToDecimalPlaces(article.totalWeight, 2),
+            articleCostAsPerWeightAndKarat = roundToDecimalPlaces(article.articleCostAsPerWeightAndKarat, 2),
+            makingCharge = roundToDecimalPlaces(article.makingCharge, 2),
+            discount = roundToDecimalPlaces(article.discount, 2),
+            articleCostBeforeTax = roundToDecimalPlaces(article.articleCostBeforeTax, 2),
+            luxuryTax = roundToDecimalPlaces(article.luxuryTax, 2),
+            articleCostAfterTax = roundToDecimalPlaces(article.articleCostAfterTax, 2),
+            finalEstimatedCost = roundToDecimalPlaces(article.finalEstimatedCost, 2),
             
             // Update validation states
             isArticleCodeValid = isArticleCodeValid,
@@ -259,7 +259,7 @@ class ReactiveArticleDetailViewModel(
         // Update gold rate for the article's karat
         goldRateResponse?.let { response ->
             val goldRateForKarat = GoldRateHelper.getGoldRateForKarat(response, article.karat)
-            updateReactiveField("goldRate24KPerTola", goldRateForKarat)
+            updateReactiveField("goldRateAsPerKaratPerTola", goldRateForKarat)
         }
     }
     
@@ -342,31 +342,12 @@ class ReactiveArticleDetailViewModel(
     fun updateArticleCode(articleCode: String) {
         updateReactiveField("articleCode", articleCode.uppercase())
     }
-    
-    fun updateNetWeight(netWeight: Double) {
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(netWeight, 2)
-        updateReactiveField("netWeight", roundedValue)
-    }
-    
-    fun updateGrossWeight(grossWeight: Double) {
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(grossWeight, 2)
-        updateReactiveField("grossWeight", roundedValue)
-    }
-    
-    fun updateAddOnCost(addOnCost: Double) {
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(addOnCost, 2)
-        updateReactiveField("addOnCost", roundedValue)
-    }
-    
-    fun updateDiscount(discount: Double) {
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(discount, 2)
-        updateReactiveField("discount", roundedValue)
-    }
-    
+
+
     fun updateWastage(wastage: Double) {
         // Manual wastage update
         _uiState.value = _uiState.value.copy(isWastageManuallyEdited = true)
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(wastage, 2)
+        val roundedValue = roundToDecimalPlaces(wastage, 3)
         
         // Validate manually entered wastage
         val isValid = calculationEngine.validateField("wastage", roundedValue, _reactiveArticle.value)
@@ -384,7 +365,7 @@ class ReactiveArticleDetailViewModel(
     fun updateMakingCharge(makingCharge: Double) {
         // Manual making charge update
         _uiState.value = _uiState.value.copy(isMakingChargeManuallyEdited = true)
-        val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(makingCharge, 2)
+        val roundedValue = roundToDecimalPlaces(makingCharge, 2)
         
         // Validate manually entered making charge
         val isValid = calculationEngine.validateField("makingCharge", roundedValue, _reactiveArticle.value)
@@ -405,7 +386,7 @@ class ReactiveArticleDetailViewModel(
     fun updateNetWeightText(text: String) {
         _uiState.value = _uiState.value.copy(netWeightText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateReactiveField("netWeight", roundedValue)
         }
     }
@@ -413,7 +394,7 @@ class ReactiveArticleDetailViewModel(
     fun updateGrossWeightText(text: String) {
         _uiState.value = _uiState.value.copy(grossWeightText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateReactiveField("grossWeight", roundedValue)
         }
     }
@@ -421,7 +402,7 @@ class ReactiveArticleDetailViewModel(
     fun updateAddOnCostText(text: String) {
         _uiState.value = _uiState.value.copy(addOnCostText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateReactiveField("addOnCost", roundedValue)
         }
     }
@@ -429,7 +410,7 @@ class ReactiveArticleDetailViewModel(
     fun updateWastageText(text: String) {
         _uiState.value = _uiState.value.copy(wastageText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateWastage(roundedValue)
         }
     }
@@ -437,7 +418,7 @@ class ReactiveArticleDetailViewModel(
     fun updateMakingChargeText(text: String) {
         _uiState.value = _uiState.value.copy(makingChargeText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateMakingCharge(roundedValue)
         }
     }
@@ -445,7 +426,7 @@ class ReactiveArticleDetailViewModel(
     fun updateDiscountText(text: String) {
         _uiState.value = _uiState.value.copy(discountText = text)
         text.toDoubleOrNull()?.let { value ->
-            val roundedValue = com.kanishk.goldscanner.utils.Utils.roundToTwoDecimalPlaces(value, 2)
+            val roundedValue = roundToDecimalPlaces(value, 2)
             updateReactiveField("discount", roundedValue)
         }
     }

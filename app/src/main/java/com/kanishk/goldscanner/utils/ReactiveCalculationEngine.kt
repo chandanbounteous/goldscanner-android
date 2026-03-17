@@ -1,6 +1,6 @@
 package com.kanishk.goldscanner.utils
 
-import com.kanishk.goldscanner.utils.Utils
+import android.util.Log
 
 /**
  * Reactive calculation engine for gold article dependency management
@@ -41,54 +41,55 @@ class ReactiveCalculationEngine {
         val newValue = when (attr) {
             "wastage" -> {
                 val value = GoldArticleCalculator.calculateWastage(current.netWeight, current.karat)
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "totalWeight" -> {
                 val value = GoldArticleCalculator.calculateTotalWeight(current.netWeight, current.wastage)
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "articleCostAsPerWeightAndKarat" -> {
+                Log.d("ReactiveCalcEngine", "Recalculating articleCostAsPerWeightAndKarat with totalWeight=${current.totalWeight}, karat=${current.karat}, goldRate24KPerTola=${current.goldRate24KPerTola}")
                 val value = GoldArticleCalculator.calculateArticleCostAsPerWeightRateAndKarat(
                     current.totalWeight, current.karat, current.goldRate24KPerTola
                 )
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "makingCharge" -> {
                 val value = GoldArticleCalculator.calculateMakingCharge(
                     current.netWeight, current.karat, current.articleCostAsPerWeightAndKarat
                 )
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "articleCostBeforeTax" -> {
                 val value = GoldArticleCalculator.calculateTotalCostBeforeTax(
                     current.articleCostAsPerWeightAndKarat, current.makingCharge, current.discount
                 )
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "luxuryTax" -> {
                 val value = GoldArticleCalculator.calculateLuxuryTax(current.articleCostBeforeTax)
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "articleCostAfterTax" -> {
                 val value = GoldArticleCalculator.calculateTotalCostAfterTax(
                     current.articleCostBeforeTax, current.luxuryTax
                 )
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             "finalEstimatedCost" -> {
                 val value = GoldArticleCalculator.calculateFinalEstimatedCost(
                     current.articleCostAfterTax, current.addOnCost
                 )
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 2)
             }
             "grossWeight" -> {
                 // Auto-calculate gross weight based on net weight and add-on cost
-                val value = if (current.addOnCost == 0.0) {
+                val value = if (current.addOnCost == 0.0 && (current.grossWeight < current.netWeight)) {
                     current.netWeight
                 } else {
                     maxOf(current.grossWeight, current.netWeight) // Ensure gross >= net when add-on exists
                 }
-                Utils.roundToTwoDecimalPlaces(value, 2)
+                Utils.roundToDecimalPlaces(value, 12)
             }
             else -> return current
         }
@@ -117,8 +118,8 @@ class ReactiveCalculationEngine {
                 val baseValid = baseValidation?.invoke(doubleValue) ?: true
                 
                 // Additional validation: gross weight should be >= net weight when addOnCost > 0
-                val grossWeightValid = if (currentArticle.addOnCost == 0.0) {
-                    doubleValue == currentArticle.netWeight
+                val grossWeightValid = if (currentArticle.addOnCost == 0.0 && doubleValue < currentArticle.netWeight) {
+                    false
                 } else {
                     doubleValue >= currentArticle.netWeight
                 }
