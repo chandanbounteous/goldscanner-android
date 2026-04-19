@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kanishk.goldscanner.domain.usecase.GetGoldArticlesUseCase
 import com.kanishk.goldscanner.data.model.GoldArticleWithCalculation
-import com.kanishk.goldscanner.data.model.response.PaginationInfo
 import com.kanishk.goldscanner.data.model.response.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +40,7 @@ class ArticleListViewModel(
     fun loadArticles(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             val currentState = _uiState.value
+            val requestQuery = currentState.searchQuery
             
             if (isLoadMore && (!currentState.hasMore || currentState.isLoadingMore)) {
                 return@launch
@@ -61,6 +61,11 @@ class ArticleListViewModel(
 
             when (result) {
                 is Result.Success -> {
+                    val latestState = _uiState.value
+                    if (latestState.searchQuery != requestQuery) {
+                        return@launch
+                    }
+
                     val (newArticles, paginationInfo) = result.data
                     val updatedArticles = if (isLoadMore) {
                         currentState.articles + newArticles
@@ -68,7 +73,7 @@ class ArticleListViewModel(
                         newArticles
                     }
 
-                    _uiState.value = currentState.copy(
+                    _uiState.value = latestState.copy(
                         articles = updatedArticles,
                         isLoading = false,
                         isLoadingMore = false,
@@ -78,7 +83,12 @@ class ArticleListViewModel(
                     )
                 }
                 is Result.Error -> {
-                    _uiState.value = currentState.copy(
+                    val latestState = _uiState.value
+                    if (latestState.searchQuery != requestQuery) {
+                        return@launch
+                    }
+
+                    _uiState.value = latestState.copy(
                         isLoading = false,
                         isLoadingMore = false,
                         error = result.errorResponse.message ?: "Failed to load articles"
