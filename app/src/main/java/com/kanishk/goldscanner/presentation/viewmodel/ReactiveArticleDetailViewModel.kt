@@ -191,7 +191,8 @@ class ReactiveArticleDetailViewModel(
         val isMakingChargeValid = article.makingCharge >= 0.0
         val isArticleCodeValid = calculationEngine.validateField("articleCode", article.articleCode, article)
         
-        _uiState.value = _uiState.value.copy(
+        val currentState = _uiState.value
+        _uiState.value = currentState.copy(
             karat = article.karat,
             goldRateAsPerKaratPerTola = roundedCurrentGoldRate,
             articleCode = article.articleCode,
@@ -217,15 +218,43 @@ class ReactiveArticleDetailViewModel(
             isWastageValid = isWastageValid,
             isMakingChargeValid = isMakingChargeValid,
             
-            // Update text states for input fields - format to show exactly 2 decimal places
-            netWeightText = if (article.netWeight == 0.0) "" else String.format("%.2f", article.netWeight),
-            grossWeightText = if (article.grossWeight == 0.0) "" else String.format("%.2f", article.grossWeight),
-            addOnCostText = if (article.addOnCost == 0.0) "" else String.format("%.2f", article.addOnCost),
-            wastageText = if (article.wastage == 0.0) "" else String.format("%.2f", article.wastage),
-            makingChargeText = if (article.makingCharge == 0.0) "" else String.format("%.2f", article.makingCharge),
-            discountText = if (article.discount == 0.0) "" else String.format("%.2f", article.discount)
+            // Preserve in-progress user input to avoid cursor/index jumps while typing.
+            netWeightText = mergeTextFieldInput(currentState.netWeightText, article.netWeight),
+            grossWeightText = mergeTextFieldInput(currentState.grossWeightText, article.grossWeight),
+            addOnCostText = mergeTextFieldInput(currentState.addOnCostText, article.addOnCost),
+            wastageText = mergeTextFieldInput(currentState.wastageText, article.wastage),
+            makingChargeText = mergeTextFieldInput(currentState.makingChargeText, article.makingCharge),
+            discountText = mergeTextFieldInput(currentState.discountText, article.discount)
         )
     }
+
+    /**
+     * Keep user's in-progress decimal input intact if it still represents the same numeric value.
+     * This prevents reactive recomposition from resetting cursor position on each keystroke.
+     */
+    private fun mergeTextFieldInput(currentText: String, numericValue: Double): String {
+        if (currentText.isBlank()) {
+            return if (numericValue == 0.0) "" else formatDecimal(numericValue)
+        }
+
+        // Preserve partial decimal typing like "." or "12."
+        if (currentText == "." || currentText.endsWith(".")) {
+            return currentText
+        }
+
+        val parsedCurrent = currentText.toDoubleOrNull()
+        if (parsedCurrent != null) {
+            val parsedRounded = roundToDecimalPlaces(parsedCurrent, 2)
+            val numericRounded = roundToDecimalPlaces(numericValue, 2)
+            if (parsedRounded == numericRounded) {
+                return currentText
+            }
+        }
+
+        return if (numericValue == 0.0) "" else formatDecimal(numericValue)
+    }
+
+    private fun formatDecimal(value: Double): String = String.format("%.2f", value)
     
     // Public API methods for UI
     fun setMode(mode: ArticleDetailMode) {
